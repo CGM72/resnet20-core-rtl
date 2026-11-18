@@ -65,8 +65,13 @@ class AnalysisTests(unittest.TestCase):
         v=analysis.parse_timing(TIMING.replace('1264','0'))
         self.assertEqual(analysis.timing_status(v),'INCOMPLETE')
 
+    def test_explicit_no_clock_report(self):
+        v=analysis.parse_timing('No clocks defined; no timing paths were found.')
+        self.assertEqual(analysis.timing_status(v),'INCOMPLETE')
+        self.assertIsNone(v['wns_ns'])
+
     def test_missing_timing_table(self):
-        with self.assertRaises(analysis.ReportError):analysis.parse_timing('No clock paths')
+        with self.assertRaises(analysis.ReportError):analysis.parse_timing('Unrecognized report format')
 
     def test_util_header_positions(self):
         u=analysis.parse_utilization(UTIL)
@@ -120,6 +125,21 @@ class AnalysisTests(unittest.TestCase):
             source.write_text('module core; wire changed; endmodule')
             second=analysis.initialize(directory,10,[source])
             self.assertNotEqual(first['source_hash'],second['source_hash'])
+
+    def test_custom_design_metadata_and_header_hash(self):
+        with tempfile.TemporaryDirectory() as temp:
+            directory=Path(temp)
+            source=directory/'filter_impl.sv';source.write_text('module gain_block; endmodule')
+            include=directory/'include';include.mkdir()
+            header=include/'scale.svh';header.write_text('`define SHIFT 1')
+            info=analysis.initialize(directory,12.5,[source],top='gain_block',part='xc7a35tcpg236-1',clock_port='sample_clk',include_dirs=[include])
+            self.assertEqual(info['top'],'gain_block')
+            self.assertEqual(info['part'],'xc7a35tcpg236-1')
+            self.assertEqual(info['clock_port'],'sample_clk')
+            self.assertEqual(len(info['sources']),2)
+            header.write_text('`define SHIFT 2')
+            changed=analysis.initialize(directory,12.5,[source],top='gain_block',part='xc7a35tcpg236-1',clock_port='sample_clk',include_dirs=[include])
+            self.assertNotEqual(info['source_hash'],changed['source_hash'])
 
 
 if __name__=='__main__':

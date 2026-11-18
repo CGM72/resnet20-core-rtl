@@ -12,7 +12,7 @@
 
 ### 워드 순서와 주소
 
-**빠르게 바뀌는 축부터 `width → height → depth → channel`**이다. Conv 가중치의 `width`, `height`는 커널의 `kx`, `ky`, `depth`는 입력 채널 `ic`, 마지막 `channel`은 출력 채널 `oc`다. 아래 식의 좌표는 모두 0부터 시작한다. 기존 [bottleneck 커널 주소식](../docs/appendix.md)은 입력 채널이 가장 빠르게 바뀌므로, 이 파일을 읽는 주소식은 아래 식을 사용한다.
+**빠르게 바뀌는 축부터 `width → height → depth → channel`**이다. Conv 가중치의 `width`, `height`는 커널의 `kx`, `ky`, `depth`는 입력 채널 `ic`, 마지막 `channel`은 출력 채널 `oc`다. 아래 식의 좌표는 모두 0부터 시작한다. Feature의 HWC 순서와 구분하여 가중치는 아래 OIHW 주소식을 사용한다.
 
 ```text
 conv_index(oc, ic, ky, kx) = ((oc * Cin + ic) * Kh + ky) * Kw + kx
@@ -93,7 +93,7 @@ python verify_bin.py --samples 10000
 
 최초 실행 시 공개 체크포인트와 [CIFAR-10 테스트 Parquet](https://huggingface.co/datasets/uoft-cs/cifar10/tree/main/plain_text)를 PyTorch 캐시에 내려받고 SHA-256을 확인한다. 로컬 파일은 `--checkpoint`와 `--test-parquet`로 지정한다. 기본 검증은 테스트 순서의 첫 1,024장을 사용한다.
 
-원본 FP32 모델의 로짓을 기준으로 전체 이미지와 클래스에 대해 `SNR = 10 log10(Σref² / Σ(ref − test)²)`를 계산한다. BN 폴딩만 한 FP32, bin에서 읽은 가중치와 bias만 Q5.10인 모델, 활성값까지 Q5.10인 모델을 각각 비교한다. 두 bin 실행의 기본 판정 기준은 기존 프로젝트의 수치 판정 기준과 같은 30 dB다. `--min-snr`로 변경할 수 있다. [기존 프로젝트 수치 판정](../docs/appendix.md#수치--판정)
+원본 FP32 모델의 로짓을 기준으로 전체 이미지와 클래스에 대해 `SNR = 10 log10(Σref² / Σ(ref − test)²)`를 계산한다. BN 폴딩만 한 FP32, bin에서 읽은 가중치와 bias만 Q5.10인 모델, 활성값까지 Q5.10인 모델을 각각 비교한다. 두 bin 실행의 기본 판정 기준은 기존 프로젝트의 수치 판정 기준과 같은 30 dB다. `--min-snr`로 변경할 수 있다. core TB의 별도 로짓 SNR 판정 기준은 50 dB다.
 
 ### CIFAR-10 테스트 이미지 10,000장 실측
 

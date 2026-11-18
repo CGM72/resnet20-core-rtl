@@ -6,12 +6,6 @@ resnet20/resnet20_pkg.sv
 resnet20/axi_resnet20.sv
 ../../rtl/compute/axi_lite_reg.v
 ../../rtl/compute/buffer.v
-../../rtl/compute/mac.v
-../../rtl/compute/residual.v
-../../rtl/compute/relu.v
-../../rtl/compute/pooling.v
-../../rtl/compute/general_average_pooling.v
-../../rtl/compute/core.sv
 ../../rtl/compute/controller.sv
 ../../rtl/compute/top_bottleneck.sv
 ../../rtl/compute/axi_bottleneck.sv

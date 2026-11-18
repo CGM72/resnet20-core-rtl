@@ -1,3 +1,0 @@
-[ PASS ] core stream outputs=48, skip delays=1/4/7/10/13, grouped Pool/GAP, reset recovery
-[ PASS ] ALL TESTS PASSED
-tb_core_stream.sv:146: $finish called at 4610000 (1ps)

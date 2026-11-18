@@ -46,6 +46,9 @@ def parse_timing(text):
                     'whs_ns', 'ths_ns', 'hold_failing_endpoints', 'hold_total_endpoints',
                     'wpws_ns', 'tpws_ns', 'pulse_failing_endpoints', 'pulse_total_endpoints']
             return dict(zip(keys, values))
+    if re.search(r'no (?:timing )?paths(?: were)? (?:found|defined)|no clocks(?: were)? (?:found|defined)', text, re.I):
+        return {key: None for key in ['wns_ns', 'tns_ns', 'setup_failing_endpoints', 'setup_total_endpoints',
+                                     'whs_ns', 'ths_ns', 'hold_failing_endpoints', 'hold_total_endpoints']}
     raise ReportError('Design Timing Summary table not found. Keep the .rpt and check its Vivado format.')
 
 
@@ -156,12 +159,17 @@ def canvas(kind, info, stage):
     draw = ImageDraw.Draw(image)
     def text(x, y, value, size=30, color=INK, bold=False):
         draw.text((x, y), str(value), fill=color, font=font(size, bold))
-    text(70, 45, f'CORE {kind}  |  {stage.replace("_", " ").upper()}', 48, bold=True)
-    text(73, 122, f'{info["part"]}  |  {info["period_ns"]:g} ns target  |  {1000/info["period_ns"]:g} MHz target', 27, MUTED)
+    heading = f'{info["top"].upper()} {kind}  |  {stage.replace("_", " ").upper()}'
+    heading_size = 48
+    while heading_size > 20 and draw.textbbox((0, 0), heading, font=font(heading_size, True))[2] > 1660:
+        heading_size -= 2
+    text(70, 45, heading, heading_size, bold=True)
+    clock_label = f'{1000/info["period_ns"]:g} MHz target' if info.get('clock_port', 'clk') else 'no automatic clock'
+    text(73, 122, f'{info["part"]}  |  {info["period_ns"]:g} ns target  |  {clock_label}', 27, MUTED)
     text(73, 166, 'Synthesis estimate; no placement/routing yet' if stage == 'post_synth' else
          'Placed and routed core; inspect raw reports and constraints', 25, MUTED)
     draw.rounded_rectangle((60, 1014, 1740, 1115), radius=16, fill='#FFF1DF')
-    text(82, 1030, 'CORE OOC ONLY: external I/O delays and reset-release constraints are incomplete.', 25, ORANGE, True)
+    text(82, 1030, 'MODULE OOC: review external I/O and reset constraints before system signoff.', 25, ORANGE, True)
     text(82, 1070, f'Source hash {info["source_hash"][:16]}  |  Reports generated locally by Vivado', 23, MUTED)
     if info.get('test_data'):
         text(73, 218, 'TEST FIXTURE - NOT AN FPGA MEASUREMENT', 27, '#B3261E', True)
@@ -208,18 +216,21 @@ def render_utilization(path, info, stage, values):
     image.save(path, format='PNG')
 
 
-def initialize(results, period, sources):
+def initialize(results, period, sources, top='core', part='xc7z020clg484-1', clock_port='clk', include_dirs=()):
     directory = Path(results)
     paths = [Path(source).resolve() for source in sources]
+    for folder in include_dirs:
+        paths.extend(sorted(p.resolve() for p in Path(folder).rglob('*') if p.suffix in ('.vh', '.svh')))
+    paths = list(dict.fromkeys(paths))
     digest = hashlib.sha256()
     source_hashes = {}
     for path in paths:
         payload = path.read_bytes()
         digest.update(path.name.encode()+b'\0'+payload)
-        source_hashes[path.name] = hashlib.sha256(payload).hexdigest()
-    info = {'top': 'core', 'part': 'xc7z020clg484-1', 'period_ns': validate_period(period),
+        source_hashes[str(path)] = hashlib.sha256(payload).hexdigest()
+    info = {'top': top, 'part': part, 'clock_port': clock_port, 'period_ns': validate_period(period),
             'created_at': datetime.now().astimezone().isoformat(),
-            'source_hash': digest.hexdigest(), 'sources': source_hashes, 'scope': 'core_ooc'}
+            'source_hash': digest.hexdigest(), 'sources': source_hashes, 'scope': 'module_ooc'}
     directory.mkdir(parents=True, exist_ok=True)
     (directory/'run_info.json').write_text(json.dumps(info, indent=2)+'\n', encoding='utf-8')
     return info
@@ -253,6 +264,10 @@ def main(argv=None):
     init.add_argument('--results', type=Path, required=True)
     init.add_argument('--period', type=float, required=True)
     init.add_argument('--sources', nargs='+', type=Path, required=True)
+    init.add_argument('--top', default='core')
+    init.add_argument('--part', default='xc7z020clg484-1')
+    init.add_argument('--clock-port', default='clk')
+    init.add_argument('--include-dirs', nargs='*', type=Path, default=[])
     render = sub.add_parser('export')
     render.add_argument('--results', type=Path, required=True)
     render.add_argument('--stage', choices=['post_synth', 'post_route'], required=True)
@@ -263,7 +278,7 @@ def main(argv=None):
             pillow()
             print('Python/Pillow image export ready')
         elif args.command == 'init':
-            initialize(args.results, args.period, args.sources)
+            initialize(args.results, args.period, args.sources, args.top, args.part, args.clock_port, args.include_dirs)
             print(f'Analysis metadata: {args.results/"run_info.json"}')
         else:
             pillow()
