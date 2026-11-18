@@ -1,5 +1,7 @@
 # 1.1.0 실행 순서
 
+[현재 1.1.0 waveform](waveforms/v1.1.0.md) · [버전별 waveform](WAVEFORMS.md) · [현재 1.1.0 post_route 리포트](../reports/v1.1.0/README.md) · [버전 비교](../reports/README.md)
+
 모든 실행 명령은 **Vivado Tcl Console**에 입력합니다.
 `build/...`는 프로젝트 폴더 아래 경로입니다. 기본 검증과 Timing/Utilization 보고서 생성에는 Python이 필요 없습니다.
 

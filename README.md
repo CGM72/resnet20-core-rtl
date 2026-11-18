@@ -10,13 +10,20 @@
 
 | 버전 | 소스 | 다운로드 파일 |
 |---|---|---|
-| 1.1.0 (최신) | [main](https://github.com/CGM72/resnet20-core-rtl/tree/main) · [v1.1.0](https://github.com/CGM72/resnet20-core-rtl/tree/v1.1.0) | [resnet20-core-rtl-v1.1.0.zip](https://github.com/CGM72/resnet20-core-rtl/raw/refs/heads/main/downloads/resnet20-core-rtl-v1.1.0.zip) |
-| 1.0.0 | [v1.0.0](https://github.com/CGM72/resnet20-core-rtl/tree/v1.0.0) | [resnet20-core-rtl-v1.0.0.zip](https://github.com/CGM72/resnet20-core-rtl/raw/refs/heads/main/downloads/resnet20-core-rtl-v1.0.0.zip) |
+| 1.1.0 (최신) | [main](https://github.com/CGM72/resnet20-core-rtl/tree/main) · [release/1.1.0](https://github.com/CGM72/resnet20-core-rtl/tree/release/1.1.0) · [v1.1.0](https://github.com/CGM72/resnet20-core-rtl/tree/v1.1.0) | [resnet20-core-rtl-v1.1.0.zip](https://github.com/CGM72/resnet20-core-rtl/raw/refs/heads/main/downloads/resnet20-core-rtl-v1.1.0.zip) |
+| 1.0.0 | [release/1.0.0](https://github.com/CGM72/resnet20-core-rtl/tree/release/1.0.0) · [v1.0.0](https://github.com/CGM72/resnet20-core-rtl/tree/v1.0.0) | [resnet20-core-rtl-v1.0.0.zip](https://github.com/CGM72/resnet20-core-rtl/raw/refs/heads/main/downloads/resnet20-core-rtl-v1.0.0.zip) |
 
 아래 설명은 1.1.0 기준입니다.
 GAP는 기본 N=1,2,4,…,1024만 지원하며 shift로 평균을 구합니다. 비지원 N은 입력을 폐기합니다.
 MAC은 5단계, GAP는 4단계이며 core 전체 우회 지연은 15개 레지스터(E0 입력 → E14 출력)입니다.
 포트와 Q5.10 계산은 유지하지만, 1.0.0과 출력 지연·GAP 지원 범위가 다릅니다.
+
+## Waveform과 버전별 실측 결과
+
+[현재 1.1.0 파형 가이드](docs/waveforms/v1.1.0.md) · [버전별 파형 차이](docs/WAVEFORMS.md) · [현재 1.1.0 리포트](reports/v1.1.0/README.md) · [1.0.0 ↔ 1.1.0 비교](reports/README.md)
+
+사용자 제공 10ns(100MHz) OOC post_route 결과에서 core WNS는 **−58.757ns → +2.716ns**, LUT는 **1129 → 609**, FF는 **413 → 544**입니다.
+1.1.0은 6개 분석 top 모두 표시된 Setup/Hold/Pulse Width 위반 endpoint가 0입니다. 원본 이미지와 측정 조건은 리포트에 있습니다.
 
 ## 1. 실행기 불러오기
 
