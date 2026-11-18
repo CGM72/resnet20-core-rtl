@@ -37,7 +37,8 @@ namespace eval fpga {
 
     # A Tcl command prefix is a list: one executable path, or e.g. {py -3}.
     # Probe the interpreter, not just PATH entries (Windows Store aliases are not runtimes).
-    proc python_command {{requested auto}} {
+    proc python_command {{requested ""}} {
+        if {$requested eq ""} {set requested [dict get [config] python]}
         set candidates {}
         if {$requested in {"" auto python}} {
             set candidates [list [list python] [list python3] [list py -3]]

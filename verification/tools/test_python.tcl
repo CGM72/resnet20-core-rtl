@@ -61,3 +61,17 @@ foreach mode {none old} {
     if {![catch {fpga::python_command} message] || ![string match "Python 3.10+ was not found.*" $message]} {error "Missing/old interpreter not diagnosed"}
 }
 puts "PASS missing or old Python explains exact-path configuration"
+
+# The installation helper must choose the same explicitly configured Python as analyze/sim.
+set saved_root $fpga::root
+set config_root [file join $saved_root build python_test_config]
+file mkdir $config_root
+set fd [open [file join $config_root dummy.sv] w];puts $fd {module dummy; endmodule};close $fd
+set fd [open [file join $config_root project.tcl] w]
+puts $fd {namespace eval ::fpga_project {variable settings [dict create part test_part top dummy clock_port clk period_ns 10 rtl_files {dummy.sv} python {C:/Program Files/Python/python.exe}]}}
+close $fd
+set fpga::root $config_root
+set mode explicit
+if {[fpga::python_command] ne [list {C:/Program Files/Python/python.exe}]} {error "No-argument helper ignored project.tcl Python"}
+set fpga::root $saved_root
+puts "PASS default helper honors project.tcl, matching Pillow install and analysis interpreter"

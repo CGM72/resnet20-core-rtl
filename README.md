@@ -16,10 +16,25 @@ source {C:/Users/idec/Desktop/Chae/Project_ResNet/codes/resnet20-core-rtl/script
 fpga::sim tb_core_stream
 ```
 
-다음 작업 전에는 `close_sim -force`, `close_project`로 닫습니다.
-Timing/자원 분석은 `fpga::analyze`로 실행합니다.
-Python은 자동 탐색합니다. PNG에 필요한 Pillow가 없으면 Vivado Tcl에서
-`exec {*}[fpga::python_command] -m pip install Pillow`로 설치합니다.
+| 명령 | 결과 | 저장 폴더 |
+|---|---|---|
+| fpga::sim tb_modules | 하위 모듈 검사·파형 | build/sim/tb_modules/ |
+| fpga::sim tb_core_stream | core 연결 검사·파형 | build/sim/tb_core_stream/ |
+| fpga::sim tb_core | 전체 모델 수치 검사 | build/sim/tb_core/ |
+| fpga::synth | 합성 보고서·DCP·넷리스트 | build/synth/core/ |
+| fpga::analyze | 합성·배치배선·Timing/자원 PNG | build/analysis/core/<실행폴더>/ |
+
+저장 경로는 기본 top=core 기준이며 프로젝트 폴더 아래입니다.
+다음 작업 전 시뮬레이션은 `close_sim -force`, `close_project`로 닫습니다. 분석/합성만 했다면 `close_project`로 닫습니다.
+
+Python은 자동 탐색합니다. PNG에 필요한 Pillow가 없으면 Tcl에서 설치합니다.
+
+```tcl
+exec {*}[fpga::python_command] -m pip install Pillow
+```
+
+발표용 이미지는 분석 폴더의 **timing/post_route.png**, **utilization/post_route.png**입니다.
+[명령별 설명·실행 순서·전체 보고서 경로](docs/GUIDE.md)에 Python 경로 지정과 오류 대처도 정리했습니다.
 
 ## 바꿀 파일
 
