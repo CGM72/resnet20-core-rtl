@@ -18,7 +18,8 @@ fpga::sim tb_core_stream
 
 다음 작업 전에는 `close_sim -force`, `close_project`로 닫습니다.
 Timing/자원 분석은 `fpga::analyze`로 실행합니다.
-PNG를 만들려면 명령 프롬프트에서 한 번 `python -m pip install Pillow`를 설치합니다.
+Python은 자동 탐색합니다. PNG에 필요한 Pillow가 없으면 Vivado Tcl에서
+`exec {*}[fpga::python_command] -m pip install Pillow`로 설치합니다.
 
 ## 바꿀 파일
 

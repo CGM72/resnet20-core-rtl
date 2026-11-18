@@ -16,7 +16,7 @@ namespace eval fpga {
         foreach key {part top period_ns rtl_files} {
             if {![dict exists $cfg $key] || [dict get $cfg $key] eq ""} {error "project.tcl: missing $key"}
         }
-        foreach {key default} {python python clock_port {} include_dirs {} defines {} xdc_files {}} {
+        foreach {key default} {python auto clock_port {} include_dirs {} defines {} xdc_files {}} {
             if {![dict exists $cfg $key]} {dict set cfg $key $default}
         }
         if {![regexp {^[A-Za-z_][A-Za-z0-9_$]*$} [dict get $cfg top]]} {error "Invalid top module name"}
@@ -33,6 +33,43 @@ namespace eval fpga {
         }
         dict set cfg fixtures $::fpga_project::fixtures
         return $cfg
+    }
+
+    # A Tcl command prefix is a list: one executable path, or e.g. {py -3}.
+    # Probe the interpreter, not just PATH entries (Windows Store aliases are not runtimes).
+    proc python_command {{requested auto}} {
+        set candidates {}
+        if {$requested in {"" auto python}} {
+            set candidates [list [list python] [list python3] [list py -3]]
+            foreach key {LOCALAPPDATA ProgramFiles ProgramFiles(x86)} {
+                if {![info exists ::env($key)]} {continue}
+                set base $::env($key)
+                if {$key eq "LOCALAPPDATA"} {set base [file join $base Programs Python]}
+                foreach path [lsort -decreasing -dictionary [glob -nocomplain -directory $base Python*/python.exe]] {
+                    lappend candidates [list $path]
+                }
+            }
+        } elseif {[file exists $requested] || [file pathtype $requested] eq "absolute" ||
+                  [string match -nocase *.exe $requested] || [regexp {[/\\]} $requested]} {
+            set candidates [list [list $requested]]
+        } else {
+            # Allows an explicit launcher prefix such as {py -3.12}.
+            if {[catch {llength $requested}]} {error "Invalid Python command/path: $requested"}
+            set candidates [list $requested]
+        }
+        set probe {import sys; sys.exit(1) if sys.version_info < (3, 10) else print("FPGA_PYTHON_OK")}
+        foreach command $candidates {
+            set executable [lindex $command 0]
+            set resolved [auto_execok $executable]
+            set resolved_path [string map {\\ /} [lindex $resolved 0]]
+            if {[string match -nocase */Microsoft/WindowsApps/python*.exe $resolved_path]} {continue}
+            if {![catch {exec {*}$command -c $probe 2>@1} output] &&
+                [lsearch -exact [split [string trim $output] "\n"] FPGA_PYTHON_OK] >= 0} {
+                puts "Python: $command"
+                return $command
+            }
+        }
+        error {Python 3.10+ was not found. Set python {C:/.../python.exe} in project.tcl, or run fpga::analyze 10.0 {C:/.../python.exe}. Install Python if no interpreter is installed.}
     }
 
     proc require_closed {} {
@@ -84,11 +121,12 @@ namespace eval fpga {
         if {$python_exe eq ""} {set python_exe [dict get $cfg python]}
         set options "-onfinish stop"
         if {[dict exists $cfg fixtures $tb]} {
+            set python_exe [python_command $python_exe]
             set fixture [dict get $cfg fixtures $tb]
             set generator [absolute [dict get $fixture generator]]
             if {![file isfile $generator]} {error "Missing fixture generator $generator"}
             set output [file join $directory [dict get $fixture output]]
-            puts [exec $python_exe $generator --out $output]
+            puts [exec {*}$python_exe $generator --out $output]
             append options " -testplusarg \"[dict get $fixture argument]=$output\""
             if {[dict exists $fixture files]} {
                 dict for {argument path} [dict get $fixture files] {
@@ -171,7 +209,7 @@ namespace eval fpga {
         check_timing -verbose -file [file join $timing "${stage}_check_timing.rpt"]
         report_utilization -name utilization_$stage -file [file join $utilization "$stage.rpt"]
         report_utilization -hierarchical -file [file join $utilization "${stage}_hierarchical.rpt"]
-        puts [exec $python_exe [file join $root scripts export_analysis.py] export --results $directory --stage $stage]
+        puts [exec {*}$python_exe [file join $root scripts export_analysis.py] export --results $directory --stage $stage]
     }
 
     proc analyze {{clock_period ""} {python_exe ""}} {
@@ -181,7 +219,8 @@ namespace eval fpga {
         if {$clock_period eq ""} {set clock_period [dict get $cfg period_ns]}
         period $clock_period
         if {$python_exe eq ""} {set python_exe [dict get $cfg python]}
-        puts [exec $python_exe [file join $root scripts export_analysis.py] check --period $clock_period]
+        set python_exe [python_command $python_exe]
+        puts [exec {*}$python_exe [file join $root scripts export_analysis.py] check --period $clock_period]
         set top [dict get $cfg top]
         set base [file join $root build analysis $top]
         set stamp [clock format [clock seconds] -format {run_%Y%m%d_%H%M%S}]
@@ -193,7 +232,7 @@ namespace eval fpga {
         }
         foreach child {timing utilization checkpoints} {file mkdir [file join $directory $child]}
         set hash_sources [concat [dict get $cfg rtl_files] [dict get $cfg xdc_files] [list [file join $root project.tcl]]]
-        puts [exec $python_exe [file join $root scripts export_analysis.py] init \
+        puts [exec {*}$python_exe [file join $root scripts export_analysis.py] init \
             --results $directory --period $clock_period --top $top --part [dict get $cfg part] \
             --clock-port [dict get $cfg clock_port] --sources {*}$hash_sources \
             --include-dirs {*}[dict get $cfg include_dirs]]

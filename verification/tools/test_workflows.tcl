@@ -9,6 +9,7 @@ set loaded_test {}
 set properties [dict create]
 set route_fails 0
 set preflight_fails 0
+set probe_only_py 0
 proc argument {args key} {
     set i [lsearch -exact $args $key]
     if {$i < 0} {error "Missing $key: $args"}
@@ -38,8 +39,15 @@ proc add_wave {args} {}
 proc run {args} {lappend ::actions run}
 rename exec workflow_real_exec
 proc exec {args} {
-    if {![file isfile [lindex $args 1]]} {error "Missing Python helper [lindex $args 1]"}
-    set mode [lindex $args 2]
+    if {[lsearch -exact $args -c] >= 0} {
+        if {$::probe_only_py && [lrange $args 0 1] ne "py -3"} {error "Interpreter unavailable"}
+        return "FPGA_PYTHON_OK"
+    }
+    set helper_index 1
+    if {[lrange $args 0 1] eq "py -3"} {set helper_index 2}
+    if {![file isfile [lindex $args $helper_index]]} {error "Missing Python helper"}
+    set ::last_python_args $args
+    set mode [lindex $args [expr {$helper_index+1}]]
     if {$mode eq "check" && $::preflight_fails} {error "Pillow missing (test stub)"}
     if {$mode eq "init"} {
         set ::last_init $args
@@ -107,6 +115,12 @@ foreach mode {0 1} {
     }
 }
 puts "PASS supplied testbenches: names/paths/config and both no-project behaviors"
+reset_mock
+set probe_only_py 1
+fpga::sim tb_modules
+if {[lrange $last_python_args 0 1] ne "py -3"} {error "Fixture generator lost launcher arguments"}
+set probe_only_py 0
+puts "PASS fixture generator accepts py -3 command prefix"
 set project user_project
 set actions {}
 if {![catch {fpga::sim tb_core_stream} msg] || ![string match "Save/close*" $msg]} {error "Open project not protected"}
@@ -130,7 +144,11 @@ if {[llength $argv]} {
     }
     puts "PASS foreign module: unrelated filename/top/clock/ports and include/define configuration"
     reset_mock
+    set probe_only_py 1
     set first [fpga::analyze]
+    if {[lrange $last_python_args 0 1] ne "py -3"} {error "Image exporter lost launcher arguments"}
+    set probe_only_py 0
+    puts "PASS analysis and image export accept py -3 command prefix"
     if {[argument $last_synth -top] ne "gain_block" || [argument $last_synth -part] ne "xc7a35tcpg236-1"} {error "Analysis ignored custom config"}
     if {[argument $last_init --top] ne "gain_block" || [argument $last_init --part] ne "xc7a35tcpg236-1" || [argument $last_init --clock-port] ne "sample_clk"} {error "PNG metadata ignored custom config"}
     if {![string match "*sample_clk*" [lindex $constraint_texts 0]] || ![string match "*-period 12.5*" [lindex $constraint_texts 0]]} {error "Wrong configured clock"}

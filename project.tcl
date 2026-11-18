@@ -5,7 +5,7 @@ namespace eval ::fpga_project {
         top core \
         clock_port clk \
         period_ns 10.0 \
-        python python \
+        python auto \
         rtl_files {
             rtl/compute/mac.v
             rtl/compute/residual.v

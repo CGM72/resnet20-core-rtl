@@ -10,19 +10,22 @@
 
 ## 1. 준비와 실행
 
-Vivado와 Python 3.10+를 사용합니다. PNG 출력에는 Pillow가 필요합니다.
-Windows 명령 프롬프트에서 한 번 설치합니다.
-
-```bat
-python -m pip install Pillow
-```
-
+Vivado와 Python 3.10+를 사용합니다. Python 실행 경로는 자동 탐색합니다.
 Vivado에서 열린 프로젝트를 저장하고 닫은 뒤 Tcl Console에서 실행기를 불러옵니다.
 
 ```tcl
 source {C:/Users/idec/Desktop/Chae/Project_ResNet/codes/resnet20-core-rtl/scripts/vivado.tcl}
 fpga::sim tb_core_stream
 ```
+
+PNG 출력에 필요한 Pillow가 없으면 같은 Vivado Tcl Console에서 한 번 설치합니다.
+
+```tcl
+exec {*}[fpga::python_command] -m pip install Pillow
+```
+
+자동 탐색으로 찾지 못하면 실제 python.exe 경로를 project.tcl의 python 항목에 지정합니다.
+Python 자체가 없다면 Python 3.10 이상을 먼저 설치합니다.
 
 이후 명령은 프로젝트를 다시 열지 않은 상태에서 실행합니다.
 시뮬레이션이 열려 있으면 `close_sim -force`, `close_project`를 사용합니다.
@@ -62,7 +65,7 @@ namespace eval ::fpga_project {
         top my_filter \
         clock_port aclk \
         period_ns 10.0 \
-        python python \
+        python auto \
         rtl_files {rtl/custom/filter_impl.sv} \
         include_dirs {} \
         defines {} \
@@ -109,7 +112,7 @@ fpga::sim tb_my_filter
 | include_dirs | RTL이 `include`하는 .vh/.svh 폴더 |
 | defines | `{USE_FEATURE WIDTH=16}` 같은 전처리 define |
 | xdc_files | 추가 클럭·입출력 지연 등 XDC. 자동 생성하는 주 클럭과 중복 정의하지 않음 |
-| python | `python` 또는 `{C:/Python312/python.exe}` |
+| python | `auto`로 자동 탐색. 직접 지정은 `{C:/Python312/python.exe}`, launcher는 `{py -3}` |
 
 클럭 없는 조합 모듈은 `clock_port {}`로 두면 자동 clock 제약을 생략합니다.
 이 경우 Timing 분석에는 virtual clock·입출력 지연 등 별도 XDC가 필요하며 경로가 없으면 INCOMPLETE입니다.
@@ -160,7 +163,10 @@ OOC 분석은 모듈 단독 결과입니다. 전체 시스템은 외부 I/O·res
 - 파일 없음: project.tcl은 프로젝트 루트 기준, TB .f는 TB 폴더 기준입니다.
 - compile에서 포트 오류: 교체한 RTL과 TB의 포트·폭·parameter를 맞춥니다.
 - 숫자만 다름: signed, 소수부, 반올림/포화와 출력 valid/지연 규약을 확인합니다.
-- Python/Pillow 오류: project.tcl에 지정한 같은 Python으로 `-m pip install Pillow`를 실행합니다.
+- Python 실행 파일 없음: 기본 auto가 `python`, `python3`, `py -3`, Windows 일반 설치 폴더에서 Python 3.10+를 찾습니다.
+- 자동 탐색도 실패: Python을 설치하거나 project.tcl의 python에 실제 python.exe 경로를 적습니다. 설치 경로 확인은 명령 프롬프트의 `py -0p` 또는 `where python`을 사용합니다.
+- 즉시 경로 지정: `fpga::analyze 10.0 {C:/실제설치경로/python.exe}`. project.tcl을 수정하지 않고 이번 실행에만 적용합니다.
+- Pillow 없음: Vivado Tcl에서 `exec {*}[fpga::python_command] -m pip install Pillow`로 선택된 같은 Python에 설치합니다.
 - 합성 결과만 필요: Pillow 없이 `fpga::synth`를 사용합니다. 결과는 `build/synth/<top>/`입니다.
 
 실행기는 순수 Verilog/SystemVerilog RTL을 대상으로 합니다. IP/Block Design에는 해당 생성·제약 작업도 필요합니다.
