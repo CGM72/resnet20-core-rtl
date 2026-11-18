@@ -29,7 +29,12 @@ def check(root):
         for top in re.findall(r'core_sim::launch\s+(tb_\w+)(?:\.sv)?', text):
             assert (root / 'tb' / top / f'{top}.sv').is_file(), (relative, top)
         assert not re.search(r'core_sim::launch\s+(?:modules|stream|core)(?:\s|`|$)', text), relative
+    for relative in ['README.md', 'docs/CORE_ANALYSIS.md']:
+        text = (root / relative).read_text()
+        for source in re.findall(r'core_analysis::run\s+([a-zA-Z0-9_.]+)', text):
+            assert (root / 'rtl' / 'compute' / source).is_file(), (relative, source)
     print('PASS: active RTL module names and documented Tcl targets match their actual files')
+    print('PASS: analysis commands refer to the actual core.sv RTL file')
 
 
 if __name__ == '__main__':

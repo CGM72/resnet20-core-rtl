@@ -1,0 +1,8 @@
+Vivado and export commands are stubs; no FPGA measurements.
+PASS: six actual RTL files, clock before OOC synth, post-synth export, place/route, post-route export
+PASS: rerun has a fresh result directory and requested clock period
+PASS: failed implementation preserves previous successful latest.txt
+PASS: existing user project protected
+PASS: missing image dependency stops before synthesis
+PASS: actual top filename core.sv enforced
+PASS: analysis launcher regression; Vivado/export commands stubbed, no device measurements

@@ -75,6 +75,25 @@ core_sim::launch tb_modules {C:/Python312/python.exe}
 `close_sim -force`는 변경된 파형 설정을 저장하지 않고 종료합니다.
 전체 모델은 단일 MAC으로 수천만 입력 클럭을 실행하므로 모듈 검사보다 오래 걸립니다.
 
+## Timing / Utilization 이미지 출력
+
+명령 프롬프트에서 한 번 `python -m pip install Pillow`를 실행합니다.
+기능 검증 프로젝트를 닫고 Vivado Tcl Console에서 실행합니다.
+
+```tcl
+source {C:/Users/idec/Desktop/Chae/Project_ResNet/codes/resnet20-core-rtl/scripts/analyze_core.tcl}
+core_analysis::run core.sv 10.0
+```
+
+합성·배치·배선 후 `build/analysis/core/<실행폴더>/`에 별도로 저장합니다.
+
+- `timing/post_route.png`: WNS·TNS·WHS·THS 등 Timing 요약.
+- `utilization/post_route.png`: LUT·FF·BRAM·DSP 사용량과 사용률.
+- 합성 후 PNG, 원본 `.rpt`, 내부 모듈별 자원 보고서와 DCP도 저장합니다.
+
+[분석·PNG 저장 상세 안내](docs/CORE_ANALYSIS.md)를 보십시오. 10ns는 목표이며 실제 달성 보장이 아닙니다.
+이 흐름은 core OOC 분석으로, 전체 시스템의 외부 I/O/reset 제약은 별도입니다.
+
 ## 기존 실행 방식
 
 Vivado bin과 Python 3.10+를 PATH에 넣고 프로젝트 루트에서 실행합니다.

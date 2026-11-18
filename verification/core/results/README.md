@@ -49,3 +49,12 @@ RTL 연산 로직은 변경하지 않았으므로 기존 전체 모델 수치 �
 
 `path_consistency.txt`: 모든 TB 파일 목록과 module 이름, README/Tcl 대상 경로 일치 검사.
 전체 모델 TB는 변경된 공통 목록으로 Verilator lint도 통과했습니다. 이 검사 역시 실제 Vivado 실행은 아닙니다.
+
+### Timing / Utilization PNG 도구 검사
+
+`analysis_export_tests.txt`: 테스트용 Vivado 보고서의 setup/hold 열, N/A/분석 경로 없음, 자원 열/누락/BRAM 소수값,
+PNG 4개 생성과 메타데이터를 검사한 Python 15개 테스트.
+`analysis_launcher_tests.txt`: 실제 RTL 6개 선택, OOC 합성→clock→보고서→배치배선→보고서 순서,
+고유 실행 폴더, 실패 시 latest.txt 유지와 열린 프로젝트 보호를 검사한 Tcl 테스트.
+Vivado/export API를 대체한 검사이며 실제 FPGA 자원/Timing 측정 기록이 아닙니다.
+생성된 테스트 이미지는 실측값과 혼동하지 않도록 build/에만 두고 저장소/ZIP에 포함하지 않습니다.

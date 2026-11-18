@@ -1,0 +1,7 @@
+Synthetic report/parser/image tests; not FPGA measurements.
+Command: python verification/core/test_analysis.py
+15 tests passed.
+Checks: timing column order, setup/hold violations, missing/NA values, zero endpoints,
+utilization header layouts, BRAM fractions, missing resources, bounded percentages,
+invalid periods, four PNGs and metrics JSON, no partial images after invalid reports,
+RTL source fingerprint changes.

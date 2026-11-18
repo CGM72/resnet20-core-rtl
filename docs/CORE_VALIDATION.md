@@ -65,6 +65,8 @@ GAP 조합 divider가 critical path인지, DSP/LUT/FF가 예산 안인지 확인
 보드 전체 타이밍은 Controller/메모리/top을 완성한 뒤 실제 I/O·reset 제약으로 별도 확인합니다.
 실제 실행한 도구와 범위는 [검증 기록](../verification/core/results/README.md)에 구분해 기록합니다.
 
+Timing/Utilization PNG와 배치배선은 별도 [분석 흐름](CORE_ANALYSIS.md)을 사용합니다.
+
 ## No projects are currently open 오류
 
 `core_sim::launch`는 프로젝트가 없는 상태에서 실행해 검증 프로젝트를 생성합니다.
