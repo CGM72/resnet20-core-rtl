@@ -5,9 +5,19 @@
 
 ## 1. 파일 준비
 
-[1.1.0 ZIP](https://github.com/CGM72/resnet20-core-rtl/raw/refs/tags/v1.1.0/downloads/resnet20-core-rtl.zip)을 새 폴더에 풉니다.
-Git을 쓰면 저장소에서 `git fetch origin` 후 `git switch release/1.1.0`을 실행합니다.
-기존 버전은 `v1.0.0`, 이번 버전은 `v1.1.0` 태그입니다. 기본 구조입니다.
+[1.1.0 ZIP](https://github.com/CGM72/resnet20-core-rtl/raw/refs/heads/main/downloads/resnet20-core-rtl-v1.1.0.zip)을 새 폴더에 풉니다.
+Git을 쓰면 Git Bash에서 다음 순서로 최신 main을 받습니다.
+
+```bash
+git fetch origin --tags
+git switch main
+git pull --ff-only origin main
+```
+
+`main`은 최신 1.1.0이며, 고정 버전은 `v1.0.0`·`v1.1.0` 태그로 보존합니다.
+버전별 ZIP은 [README의 다운로드 표](../README.md)를 이용합니다.
+ZIP 파일명에는 버전이 들어가며, 압축 안의 폴더는 기존 경로와 같은 `resnet20-core-rtl/`입니다.
+RTL·TB 파일명과 `fpga::test`·`fpga::analyze` 명령은 동일합니다. 기본 구조입니다.
 
 ```text
 project.tcl                  FPGA part / 클럭 / RTL / 모듈별 대상 설정

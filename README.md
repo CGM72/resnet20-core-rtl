@@ -1,11 +1,19 @@
 # ResNet-20 core 1.1.0
 
-[전체 ZIP](https://github.com/CGM72/resnet20-core-rtl/raw/refs/tags/v1.1.0/downloads/resnet20-core-rtl.zip) · [순서대로 실행하는 가이드](docs/GUIDE.md)
+[전체 ZIP](https://github.com/CGM72/resnet20-core-rtl/raw/refs/heads/main/downloads/resnet20-core-rtl-v1.1.0.zip) · [순서대로 실행하는 가이드](docs/GUIDE.md)
 
 `core.v`와 MAC·Residual·ReLU·MaxPool·GAP를 구현했습니다.
 기본 수치 형식은 signed INT16/Q5.10, 단일 MAC입니다. Controller/AXI/DMA는 별도 영역입니다.
 
-버전 **1.1.0**, 브랜치 `release/1.1.0`입니다. 기존 코드는 `main`과 `v1.0.0` 태그에 유지합니다.
+`main`은 최신 **1.1.0** 코드입니다. 버전 태그 `v1.0.0`과 `v1.1.0`은 보존합니다.
+버전은 ZIP 파일명과 `VERSION`에 표시하며, RTL·TB 파일명과 Vivado 명령은 유지합니다.
+
+| 버전 | 소스 | 다운로드 파일 |
+|---|---|---|
+| 1.1.0 (최신) | [main](https://github.com/CGM72/resnet20-core-rtl/tree/main) · [v1.1.0](https://github.com/CGM72/resnet20-core-rtl/tree/v1.1.0) | [resnet20-core-rtl-v1.1.0.zip](https://github.com/CGM72/resnet20-core-rtl/raw/refs/heads/main/downloads/resnet20-core-rtl-v1.1.0.zip) |
+| 1.0.0 | [v1.0.0](https://github.com/CGM72/resnet20-core-rtl/tree/v1.0.0) | [resnet20-core-rtl-v1.0.0.zip](https://github.com/CGM72/resnet20-core-rtl/raw/refs/heads/main/downloads/resnet20-core-rtl-v1.0.0.zip) |
+
+아래 설명은 1.1.0 기준입니다.
 GAP는 기본 N=1,2,4,…,1024만 지원하며 shift로 평균을 구합니다. 비지원 N은 입력을 폐기합니다.
 MAC은 5단계, GAP는 4단계이며 core 전체 우회 지연은 15개 레지스터(E0 입력 → E14 출력)입니다.
 포트와 Q5.10 계산은 유지하지만, 1.0.0과 출력 지연·GAP 지원 범위가 다릅니다.
