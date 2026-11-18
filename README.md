@@ -1,6 +1,6 @@
 # ResNet-20 Core — 첨부 양식 기반 구현
 
-[전체 프로젝트 ZIP 다운로드](https://github.com/CGM72/resnet20-core-rtl/raw/refs/heads/main/downloads/resnet20-accelerator-core.zip)
+[전체 프로젝트 ZIP 다운로드](https://github.com/CGM72/resnet20-core-rtl/raw/refs/heads/main/downloads/resnet20-core-rtl.zip)
 
 `rtl/compute/core.sv`와 5개 하위 모듈을 실제 합성 가능한 RTL로 구현했습니다.
 이전 명령형 SIMD 설계는 사용하지 않고, 첨부의 **단일 lane · signed INT16 · Q5.10 · valid-only 포트**를 유지했습니다.
@@ -21,7 +21,7 @@ core.sv
 | rtl/compute/pooling.v | N개 유효 입력의 signed 최대값 |
 | rtl/compute/general_average_pooling.v | N개 유효 입력의 반올림 평균 |
 | tb/tb_modules/ | 실제 하위 모듈의 수치·출력 타이밍 검사 |
-| tb/tb_core_stream.sv | skip 지연, 연속 입력, Pool/GAP 조합, reset 복구 검사 |
+| tb/tb_core_stream/tb_core_stream.sv | skip 지연, 연속 입력, Pool/GAP 조합, reset 복구 검사 |
 | tb/tb_core/ | 첨부 ResNet-20 전체 실행과 22개 affine 레이어 정수 정답 비교 |
 
 ## 연결 규약
@@ -37,12 +37,21 @@ core.sv
 
 ## Vivado GUI 검증
 
+| Tcl 인자 / Simulation Top | 실제 TB / 파일 목록 |
+|---|---|
+| tb_modules | tb/tb_modules/tb_modules.sv / tb_modules.f |
+| tb_core_stream | tb/tb_core_stream/tb_core_stream.sv / tb_core_stream.f |
+| tb_core | tb/tb_core/tb_core.sv / tb_core.f |
+
+`core_sim::launch tb_modules.sv`처럼 실제 파일명을 넣어도 같은 TB를 실행합니다.
+RTL top은 `rtl/compute/core.sv`의 `core`이며, TB top은 위 이름을 사용합니다.
+
 Vivado Tcl Console에서 **프로젝트의 실제 경로**로 source합니다. 열린 프로젝트는 저장하고 닫습니다.
-ZIP의 최상위 폴더는 `resnet20-accelerator-main`입니다. Git clone을 사용했다면 source 경로를 clone 폴더명에 맞춥니다.
+Git clone 폴더와 ZIP의 최상위 폴더를 모두 `resnet20-core-rtl`로 통일했습니다.
 
 ```tcl
-source {C:/Users/idec/Desktop/Chae/Project_ResNet/codes/resnet20-accelerator-main/scripts/validate_core.tcl}
-core_sim::launch modules
+source {C:/Users/idec/Desktop/Chae/Project_ResNet/codes/resnet20-core-rtl/scripts/validate_core.tcl}
+core_sim::launch tb_modules
 ```
 
 최종 `[ PASS ] ALL TESTS PASSED`를 확인하고 다음 검사를 실행합니다.
@@ -50,17 +59,17 @@ core_sim::launch modules
 ```tcl
 close_sim -force
 close_project
-core_sim::launch stream
+core_sim::launch tb_core_stream
 # PASS 확인 후
 close_sim -force
 close_project
-core_sim::launch core
+core_sim::launch tb_core
 ```
 
-modules/core 실행기는 Python 3.10+로 기대 데이터를 자동 생성합니다. Python 경로를 지정할 수도 있습니다.
+tb_modules/tb_core 실행기는 Python 3.10+로 기대 데이터를 자동 생성합니다. Python 경로를 지정할 수도 있습니다.
 
 ```tcl
-core_sim::launch modules {C:/Python312/python.exe}
+core_sim::launch tb_modules {C:/Python312/python.exe}
 ```
 
 `close_sim -force`는 변경된 파형 설정을 저장하지 않고 종료합니다.

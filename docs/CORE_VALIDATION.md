@@ -4,9 +4,13 @@
 
 | 검사 | Vivado 실행 명령 | 검사 내용 |
 |---|---|---|
-| 하위 모듈 | `core_sim::launch modules` | MAC/bias/Add/ReLU/Max/AVG 값과 매 클럭 valid |
-| Core 연결 | `core_sim::launch stream` | 연속 입력·공백·skip 지연·Pool/GAP 조합·reset 복구 |
-| 전체 모델 | `core_sim::launch core` | 첨부 ResNet-20의 22개 affine 레이어 정수 정답과 로짓 SNR |
+| 하위 모듈 | `core_sim::launch tb_modules` | MAC/bias/Add/ReLU/Max/AVG 값과 매 클럭 valid |
+| Core 연결 | `core_sim::launch tb_core_stream` | 연속 입력·공백·skip 지연·Pool/GAP 조합·reset 복구 |
+| 전체 모델 | `core_sim::launch tb_core` | 첨부 ResNet-20의 22개 affine 레이어 정수 정답과 로짓 SNR |
+
+세 TB는 모두 `tb/<이름>/<이름>.sv`와 같은 폴더의 `<이름>.f`를 사용합니다.
+Tcl의 이름과 Simulation Top은 해당 `<이름>`으로 같습니다.
+`core_sim::launch tb_modules.sv`처럼 파일명을 지정해도 됩니다.
 
 README의 source 절차를 사용합니다. 다음 TB로 바꾸기 전 `close_sim -force`, `close_project`를 실행합니다.
 Python이 PATH에 없으면 launch의 두 번째 인자로 실행 파일을 지정합니다.
@@ -68,3 +72,6 @@ GAP 조합 divider가 critical path인지, DSP/LUT/FF가 예산 안인지 확인
 최신 `scripts/validate_core.tcl`로 교체한 뒤 **source를 다시 실행**하고 launch하십시오.
 기존 proc가 메모리에 남아 있으므로 파일 교체만으로는 적용되지 않습니다.
 수동으로 빈 프로젝트를 만들 필요는 없습니다.
+
+파일 배치가 맞는지 확인하려면 프로젝트 루트에서 `python verification/core/check_paths.py`를 실행합니다.
+이 검사는 실제 파일·module 선언·.f 경로·문서의 Tcl 대상 이름을 대조하며 Vivado가 필요하지 않습니다.

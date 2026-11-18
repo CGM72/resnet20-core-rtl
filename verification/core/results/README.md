@@ -34,6 +34,18 @@ Controller/top/AXI/DMA는 구현 범위 밖이므로 전체 시스템 검증 완
 ### Launcher 수정 검증
 
 `current_project -quiet`가 프로젝트 없음 오류를 반환하는 환경을 재현해 수정했습니다.
-`tclsh verification/core/test_launcher.tcl`에서 오류/빈 값 두 경우 모두 modules/stream/core 실행 경로를 확인했고,
+`tclsh verification/core/test_launcher.tcl`에서 오류/빈 값 두 경우 모두 tb_modules/tb_core_stream/tb_core 실행 경로를 확인했고,
 이미 열린 사용자 프로젝트는 생성/시뮬레이션 전에 차단되는지 확인했습니다.
 이는 Vivado API를 대체한 Tcl 회귀검사이며 실제 Vivado 실행을 뜻하지 않습니다.
+
+### 파일명·경로 정리
+
+Tcl 인자, Simulation Top, TB 폴더, .sv와 .f의 기본 이름을
+`tb_modules` / `tb_core_stream` / `tb_core`로 통일했습니다.
+`tb_core_stream`도 같은 이름의 폴더로 이동했습니다.
+이름 또는 해당 .sv 파일명을 넣는 경우 모두 같은 top/프로젝트로 연결되는지 Tcl 회귀검사했습니다.
+tb_modules/tb_core_stream의 Icarus 검증은 변경된 .f 위치에서 다시 실행했습니다.
+RTL 연산 로직은 변경하지 않았으므로 기존 전체 모델 수치 검증 기록은 그대로 유효합니다.
+
+`path_consistency.txt`: 모든 TB 파일 목록과 module 이름, README/Tcl 대상 경로 일치 검사.
+전체 모델 TB는 변경된 공통 목록으로 Verilator lint도 통과했습니다. 이 검사 역시 실제 Vivado 실행은 아닙니다.

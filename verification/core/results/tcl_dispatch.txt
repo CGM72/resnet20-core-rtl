@@ -1,5 +1,0 @@
-fixture generation stub (parser/dispatch check only)
-PASS: modules manifest / absolute paths / set_property -dict: xsim.simulate.xsim.more_options {-onfinish stop -testplusarg "vectors_path=/workspace/work/resnet20_redesign/resnet20-accelerator-main/build/vivado/tb_modules/unit_vectors.txt"}
-PASS: stream manifest / absolute paths / set_property -dict: xsim.simulate.xsim.more_options {-onfinish stop}
-fixture generation stub (parser/dispatch check only)
-PASS: core manifest / absolute paths / set_property -dict: xsim.simulate.xsim.more_options {-onfinish stop -testplusarg "vectors_dir=/workspace/work/resnet20_redesign/resnet20-accelerator-main/build/vivado/tb_core/vectors" -testplusarg "weight_path=/workspace/work/resnet20_redesign/resnet20-accelerator-main/verification/resnet20/weight.bin"}

@@ -1,0 +1,5 @@
+PASS: tb/tb_axi_bottleneck/tb_axi_bottleneck.f -> tb_axi_bottleneck (18 sources)
+PASS: tb/tb_core/tb_core.f -> tb_core (7 sources)
+PASS: tb/tb_core_stream/tb_core_stream.f -> tb_core_stream (7 sources)
+PASS: tb/tb_modules/tb_modules.f -> tb_modules (6 sources)
+PASS: active RTL module names and documented Tcl targets match their actual files

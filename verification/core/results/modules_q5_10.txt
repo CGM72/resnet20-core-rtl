@@ -1,4 +1,4 @@
-vectors=build/unit_vectors.txt
+vectors=../../build/naming_check/unit_vectors.txt
 [ PASS ] modules WORD_W=16 FRAC_W=10 cycles=139463
 [ PASS ] module 0 outputs=278
 [ PASS ] module 1 outputs=278
@@ -7,4 +7,4 @@ vectors=build/unit_vectors.txt
 [ PASS ] module 4 outputs=278
 [ PASS ] module 5 outputs=278
 [ PASS ] ALL TESTS PASSED
-tb/tb_modules/tb_modules.sv:81: $finish called at 1394636000 (1ps)
+tb_modules.sv:81: $finish called at 1394636000 (1ps)
