@@ -1,0 +1,5 @@
+Yosys 0.52 generic synth -noabc and check -assert: 0 problems.
+XC7 DSP mapping stage: 1 DSP48E1 in the actual rtl/compute hierarchy.
+MAC accumulator width: 48; GAP sum width: 32 (default parameters).
+GAP intentionally uses a bounded-width combinational divider to preserve the valid-only two-stage interface.
+This is not a Vivado final utilization, timing, placement/routing or board report.
