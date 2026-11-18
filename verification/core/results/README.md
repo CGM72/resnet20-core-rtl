@@ -30,3 +30,10 @@ Windows .bat는 경로/소스 선택을 수정했지만 Windows에서 직접 실
 Controller/top/AXI/DMA는 구현 범위 밖이므로 전체 시스템 검증 완료를 주장하지 않습니다.
 
 로그 파일은 이 폴더에 있으며 자원 검사 범위는 resource_check.txt에 적었습니다.
+
+### Launcher 수정 검증
+
+`current_project -quiet`가 프로젝트 없음 오류를 반환하는 환경을 재현해 수정했습니다.
+`tclsh verification/core/test_launcher.tcl`에서 오류/빈 값 두 경우 모두 modules/stream/core 실행 경로를 확인했고,
+이미 열린 사용자 프로젝트는 생성/시뮬레이션 전에 차단되는지 확인했습니다.
+이는 Vivado API를 대체한 Tcl 회귀검사이며 실제 Vivado 실행을 뜻하지 않습니다.

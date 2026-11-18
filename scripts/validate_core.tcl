@@ -7,7 +7,11 @@ namespace eval core_sim {
     variable root [file normalize [file join [file dirname [info script]] ..]]
     proc launch {bench {python_exe python}} {
         variable root
-        if {[current_project -quiet] ne ""} {
+        # Some Vivado versions still throw Coretcl 2-88 for current_project -quiet
+        # when no project is open. That is the normal starting state for this helper.
+        set open_project ""
+        catch {set open_project [current_project -quiet]}
+        if {$open_project ne ""} {
             error "Save/close the current project first. For an open simulation: close_sim -force; close_project"
         }
         switch -- $bench {

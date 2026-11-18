@@ -1,0 +1,12 @@
+Fixture execution stub: launcher regression only
+PASS: closed/error/modules creates project and dispatches simulation
+PASS: closed/error/stream creates project and dispatches simulation
+Fixture execution stub: launcher regression only
+PASS: closed/error/core creates project and dispatches simulation
+Fixture execution stub: launcher regression only
+PASS: closed/empty/modules creates project and dispatches simulation
+PASS: closed/empty/stream creates project and dispatches simulation
+Fixture execution stub: launcher regression only
+PASS: closed/empty/core creates project and dispatches simulation
+PASS: open project rejected before any creation or simulation
+PASS: launcher project-state regression (Vivado APIs stubbed)
