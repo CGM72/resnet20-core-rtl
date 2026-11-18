@@ -30,7 +30,7 @@ UTIL = '''Vivado test fixture (not a measured design)
 def fixture(directory):
     for child in ('timing', 'utilization'):
         (directory/child).mkdir(parents=True)
-    analysis.initialize(directory, 10, [ROOT/'rtl/compute/core.sv'])
+    analysis.initialize(directory, 10, [ROOT/'rtl/compute/core.v'])
     info=json.loads((directory/'run_info.json').read_text())
     info['test_data']=True
     (directory/'run_info.json').write_text(json.dumps(info))
@@ -120,7 +120,7 @@ class AnalysisTests(unittest.TestCase):
     def test_source_hash_changes(self):
         with tempfile.TemporaryDirectory() as temp:
             directory=Path(temp)
-            source=directory/'core.sv';source.write_text('module core; endmodule')
+            source=directory/'core.v';source.write_text('module core; endmodule')
             first=analysis.initialize(directory,10,[source])
             source.write_text('module core; wire changed; endmodule')
             second=analysis.initialize(directory,10,[source])

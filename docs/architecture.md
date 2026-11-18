@@ -18,7 +18,7 @@ flowchart LR
 
 | 파일 | 기능 |
 |---|---|
-| rtl/compute/core.sv | 연산 모듈 연결과 MAC/skip 정렬 |
+| rtl/compute/core.v | 연산 모듈 연결과 MAC/skip 정렬 |
 | mac.v | 곱셈/누산, 첫 항 bias, `round_shift()`와 `saturate()` |
 | residual.v | main+skip 합과 `saturate()` |
 | relu.v | 음수 제거 / 우회 |
