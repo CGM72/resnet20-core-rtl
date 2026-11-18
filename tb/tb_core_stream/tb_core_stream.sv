@@ -71,7 +71,7 @@ module tb_core_stream;
 	endtask
 	task drain;
 		begin
-			bubble(14);
+			bubble(20);
 			if(received!=queued) $fatal(1,"Missing outputs received=%0d expected=%0d",received,queued);
 		end
 	endtask
@@ -96,16 +96,16 @@ module tb_core_stream;
 			end
 			drain();
 		end
-		// Combined MAC->Residual->ReLU->Max2->AVG3, no inter-dot drain.
+		// Combined MAC->Residual->ReLU->Max2->AVG4, no inter-dot drain.
 		mac_iteration=2;
 		relu_enable=1;
 		pooling_enable=1;
 		pooling_iteration=2;
 		gap_enable=1;
-		gap_iteration=3;
-		expect_word(1);
-		expect_word(11);
-		for(j=0;j<12;j=j+1) begin
+		gap_iteration=4;
+		expect_word(3);
+		expect_word(17);
+		for(j=0;j<16;j=j+1) begin
 			send(-9+2*j,1024,0);
 			send(0,1024,0);
 			send(2,0,0);
@@ -150,10 +150,37 @@ module tb_core_stream;
 		send(14,1024,0);
 		drain();
 
+        // Continuous one-tap/skip pairs: FIFO wraparound and exact alignment.
+        mac_enable=1; residual_enable=1; relu_enable=0;
+        mac_iteration=1; pooling_enable=0; gap_enable=0;
+        for(group_index=0;group_index<128;group_index=group_index+1) begin
+            send(group_index-64,1024,0);
+            last_cycle=cycle+1;
+            send(100,0,0);
+            expect_word(group_index+36,last_cycle+14);
+        end
+        drain();
+        // Unsupported GAP windows discard data; supported size recovers after drain.
+        mac_enable=0; residual_enable=0; gap_enable=1; gap_iteration=3;
+        for(group_index=0;group_index<9;group_index=group_index+1) send(77,0,0);
+        drain();
+        gap_iteration=2;
+        send(-1,0,0); send(0,0,0); expect_word(-1,cycle+15);
+        drain();
+        // Reset cancels results at every position before the output register.
+        gap_enable=0;
+        for(delay=0;delay<14;delay=delay+1) begin
+            send(999,0,0);
+            bubble(delay);
+            reset_unit();
+            send(15+delay,0,0); expect_word(15+delay,cycle+15);
+            drain();
+        end
+
         seed=$urandom(seed);
         // Random whole-core schedule. Compare values AND exact post-edge valid timing.
-        // A last MAC input at cycle L yields output L+9 without residual.
-        // With skip at S, rendezvous at max(L+2,S) yields output max(L+2,S)+7.
+        // A last MAC input at cycle L yields output L+14 without residual.
+        // With skip at S, rendezvous at max(L+5,S) yields output max(L+5,S)+9.
         for(batch=0;batch<40;batch=batch+1) begin
             mac_enable=1;
             residual_enable=$urandom_range(0,1);
@@ -183,8 +210,8 @@ module tb_core_stream;
                     skip_cycle=cycle+1;
                     result=result+shortcut_value;
                     result=result>32767 ? 32767 : result < -32768 ? -32768 : result;
-                    due=(last_cycle+2>skip_cycle ? last_cycle+2 : skip_cycle)+7;
-                end else due=last_cycle+9;
+                    due=(last_cycle+5>skip_cycle ? last_cycle+5 : skip_cycle)+9;
+                end else due=last_cycle+14;
                 if(relu_enable && result<0) result=0;
                 expect_word(result,due);
             end
@@ -193,7 +220,7 @@ module tb_core_stream;
         mac_enable=0;residual_enable=0;relu_enable=0;
         for(group_index=0;group_index<20;group_index=group_index+1) begin
             send(group_index-10,0,0);
-            expect_word(group_index-10,cycle+10);
+            expect_word(group_index-10,cycle+15);
             bubble($urandom_range(0,2));
         end
         drain();

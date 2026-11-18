@@ -2,6 +2,7 @@
 from pathlib import Path
 import argparse
 import random
+from collections import deque
 
 
 def generate(output, width=16, frac=10, long_test=True):
@@ -10,7 +11,9 @@ def generate(output, width=16, frac=10, long_test=True):
     scale = 1 << frac
     def sat(v): return max(lo, min(hi, v))
     def rounded(v, n): return (-1 if v < 0 else 1)*((abs(v)+n//2)//n)
-    pending = [None]*6
+    # Event-to-output register delays: MAC 5 stages, GAP 4, other units 2.
+    delays = (4,4,1,1,1,3)
+    pending = [deque([None]*delay) for delay in delays]
     terms = []
     counts = [0]*6
     cycles = 0
@@ -19,8 +22,10 @@ def generate(output, width=16, frac=10, long_test=True):
     with output.open('w') as stream:
         def tick(reset=1, enable=1, valid=0, n=1, data=0, kernel=0, bias=0, skip=0):
             nonlocal pending, terms, cycles
-            # Modules output the previous accepted event through their second register.
-            expected = pending if reset else [None]*6
+            # Queue mathematical events to the public, fixed output clock for each module.
+            if not reset:
+                pending = [deque([None]*delay) for delay in delays]
+            expected = [queue.popleft() for queue in pending]
             event = [None]*6
             if not reset:
                 terms = []
@@ -39,9 +44,10 @@ def generate(output, width=16, frac=10, long_test=True):
                         event[0] = sat(rounded(dot, scale))
                         event[1] = sat(rounded(dot+terms[0][2]*scale, scale))
                         event[4] = max(d for d,_,_ in terms)
-                        event[5] = rounded(sum(d for d,_,_ in terms), n)
+                        if n <= 1024 and (n & (n-1)) == 0:
+                            event[5] = rounded(sum(d for d,_,_ in terms), n)
                         terms = []
-            pending = event
+            for queue,value in zip(pending,event): queue.append(value)
             row = [reset,enable,valid,n,data,kernel,bias,skip]
             for i, value in enumerate(expected):
                 row.extend((int(value is not None), value if value is not None else 0))
@@ -49,7 +55,7 @@ def generate(output, width=16, frac=10, long_test=True):
             stream.write(' '.join(map(str,row))+'\n')
             cycles += 1
         def drain():
-            for _ in range(3): tick(valid=0)
+            for _ in range(max(delays)+2): tick(valid=0)
         tick(reset=0)
         tick(reset=0)
         # Bypass and signed overflow boundaries.
@@ -62,7 +68,7 @@ def generate(output, width=16, frac=10, long_test=True):
         for d,k,b in [(1,scale//2,1),(-2,scale//2,123),(-1,scale//2,-1),(2,scale//2,123)]:
             tick(valid=1,n=2,data=d,kernel=k,bias=b,skip=hi)
         drain()
-        sizes=[1,2,3,9,31,64,576,1023]
+        sizes=[1,2,4,8,16,32,64,128,256,512,1024,3,9,31,576,1023,2048]
         if long_test: sizes.append(65535)
         for n in sizes:
             for group in range(2):
@@ -84,6 +90,13 @@ def generate(output, width=16, frac=10, long_test=True):
             tick(valid=1,n=n,data=hi,kernel=hi)
             tick(reset=0)
             tick(valid=1,n=1,data=-3,kernel=scale,bias=1,skip=2)
+            drain()
+        # Abort any in-flight MAC/GAP stage, then verify fresh values after reset.
+        for offset in range(5):
+            tick(valid=1,n=1,data=hi,kernel=hi,bias=hi)
+            for _ in range(offset): tick(valid=0)
+            tick(reset=0)
+            tick(valid=1,n=1,data=-1,kernel=scale//2)
             drain()
         # Zero repetition suppresses group modules; Add/ReLU are still single-value operators.
         for _ in range(4):tick(valid=1,n=0,data=7,kernel=scale)

@@ -4,8 +4,8 @@ module tb_core #(
     parameter int SKIP_DELAY_CYCLES = 1,
     parameter int OUTPUT_FRAC_BITS  = 10
 );
-    // Five registered datapath stages with two clocks per stage.
-    localparam int CORE_PIPELINE_CYCLES = 10;
+    // MAC 5 + Residual 2 + ReLU 2 + Pool 2 + GAP 4 registers.
+    localparam int CORE_PIPELINE_CYCLES = 15;
     localparam int CORE_FRAC_BITS = 10;
 
     // --------------------------------

@@ -1,11 +1,13 @@
-# 실행 순서
+# 1.1.0 실행 순서
 
 모든 실행 명령은 **Vivado Tcl Console**에 입력합니다.
 `build/...`는 프로젝트 폴더 아래 경로입니다. 기본 검증과 Timing/Utilization 보고서 생성에는 Python이 필요 없습니다.
 
 ## 1. 파일 준비
 
-ZIP을 새 폴더에 풉니다. 기본 구조입니다.
+[1.1.0 ZIP](https://github.com/CGM72/resnet20-core-rtl/raw/refs/tags/v1.1.0/downloads/resnet20-core-rtl.zip)을 새 폴더에 풉니다.
+Git을 쓰면 저장소에서 `git fetch origin` 후 `git switch release/1.1.0`을 실행합니다.
+기존 버전은 `v1.0.0`, 이번 버전은 `v1.1.0` 태그입니다. 기본 구조입니다.
 
 ```text
 project.tcl                  FPGA part / 클럭 / RTL / 모듈별 대상 설정
@@ -15,7 +17,7 @@ rtl/compute/
   residual.v                 잔차 합과 포화
   relu.v                     ReLU / 우회
   pooling.v                  signed MaxPool
-  general_average_pooling.v  반올림 평균
+  general_average_pooling.v  2의 거듭제곱 N의 shift 평균
 tb/tb_<모듈>/                독립 TB .sv 및 .f
 tb/common/                   공통 driver/scoreboard와 사전 계산 정답
 scripts/vivado.tcl            실행기
@@ -23,6 +25,8 @@ scripts/vivado.tcl            실행기
 
 core의 포트·수치·입력 순서는 [구조 설명](architecture.md)을 따릅니다.
 기본은 INT16/Q5.10 단일 lane입니다. 설정은 작업 중 고정하고 유효 출력은 모두 받아야 합니다.
+GAP는 기본 N=1,2,4,…,1024만 지원합니다. 활성 상태의 0·비지원 크기는 입력을 폐기하므로 임의 N을 넣지 마십시오.
+MAC 5단계·GAP 4단계에 맞춰 TB를 갱신했습니다. 전체 우회는 E0 입력 → E14 출력 → E15 소비입니다.
 기본 targets는 위 6개 RTL을 사용합니다. 나머지 원본 AXI/controller 코드는 별도 통합 대상입니다.
 
 ## 2. 실행기 불러오기
@@ -149,7 +153,10 @@ build/analysis/relu/
 | 자원 | utilization/post_route.rpt: LUT·FF·BRAM·DSP 사용량과 가용량 |
 
 모듈 OOC 분석입니다. 외부 I/O·reset·추가 클럭 제약은 전체 시스템에서 완성해야 합니다.
-기본 core의 GAP 가변 나눗셈과 MAC 마지막 항 경로는 특히 실제 critical path를 확인해야 합니다.
+1.1.0에서는 GAP의 가변 나눗셈을 제거하고 MAC의 곱셈·누산·반올림·포화를 분리했습니다.
+누산 피드백 덧셈, GAP의 반올림/가변 shift, skip FIFO→Residual 경로 등 실제 최악 경로를 확인하십시오.
+1.0.0과 비교할 때는 같은 part·클럭 주기·Vivado 버전에서 각각 analyze하여 post_route.rpt를 비교합니다.
+레지스터 증가로 FF 사용량과 지연이 늘 수 있으며, 입력 처리율은 한 항/클럭으로 유지합니다.
 100MHz는 목표이며 기능 PASS만으로 충족을 보장하지 않습니다.
 
 ## 5. PNG가 필요할 때만 변환

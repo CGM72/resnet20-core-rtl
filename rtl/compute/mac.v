@@ -40,127 +40,108 @@ module mac #(
 endmodule
 
 //======================================================================
-// mac_accumulate: 단일 곱셈기 + 넓은 누산기 + 두 단계 valid 파이프라인.
-// 첫 유효 항에서만 bias를 Q(2*FRAC_W) 단위로 올려 더한다.
-// N번째 유효 항까지 누산한 뒤 Q(FRAC_W) 반올림/포화를 한 번 수행한다.
-// last_input은 마지막 MAC 항을 수신하는 상승 에지의 경계 표시이다.
-// enable=0은 우회. enable=1, iteration=0은 입력 폐기/부분합 초기화이다.
+// mac_accumulate v1.1.0: 한 입력/클럭, 5단계 단일 lane MAC.
+// S0 곱셈 → S1 누산/최종 합 → S2 절댓값 → S3 반올림 → S4 포화/부호 복원.
+// 첫 항 bias만 사용하며 N번째 항을 받은 E0의 결과는 E4 직후 유효하다.
+// enable=0 우회도 같은 지연이다. iteration=0은 부분 그룹을 폐기한다.
+// 데이터 레지스터는 reset하지 않고 valid만 reset해 DSP 레지스터 추론을 돕는다.
 //======================================================================
 module mac_accumulate #(
-	parameter integer BITWIDTH = 16,
-	parameter integer BITWIDTH_MAC_ITERATION = 16,
-	parameter integer FRAC_W = 10
+    parameter integer BITWIDTH = 16,
+    parameter integer BITWIDTH_MAC_ITERATION = 16,
+    parameter integer FRAC_W = 10
 )(
-	input  wire clk,
-	input  wire nrst,
-	input  wire enable,
-	input  wire in_enable,
-	input  wire [BITWIDTH_MAC_ITERATION-1:0] iteration,
-	input  wire signed [BITWIDTH-1:0] in_data,
-	input  wire signed [BITWIDTH-1:0] kernel_data,
-	input  wire signed [BITWIDTH-1:0] bias_data,
-
-	output wire last_input,
-	output reg out_enable,
-	output reg signed [BITWIDTH-1:0] out_data
+    input wire clk, nrst, enable, in_enable,
+    input wire [BITWIDTH_MAC_ITERATION-1:0] iteration,
+    input wire signed [BITWIDTH-1:0] in_data, kernel_data, bias_data,
+    output wire last_input,
+    output reg out_enable,
+    output reg signed [BITWIDTH-1:0] out_data
 );
-	localparam integer WORD_W = BITWIDTH;
-	localparam integer ITER_W = BITWIDTH_MAC_ITERATION;
-	localparam integer PROD_W = WORD_W + WORD_W;
-	localparam integer ACC_W = PROD_W + ITER_W;
-	localparam integer RND_W = ACC_W + 1;
-	localparam [RND_W-1:0] ONE = {{(RND_W-1){1'b0}},1'b1};
-	localparam [RND_W-1:0] HALF = FRAC_W > 0 ? (ONE << (FRAC_W-1)) : 0;
-	localparam signed [ACC_W-1:0] SAT_MAX = {{(ACC_W-WORD_W){1'b0}},1'b0,{(WORD_W-1){1'b1}}};
-	localparam signed [ACC_W-1:0] SAT_MIN = {{(ACC_W-WORD_W){1'b1}},1'b1,{(WORD_W-1){1'b0}}};
+    localparam integer WORD_W = BITWIDTH;
+    localparam integer ITER_W = BITWIDTH_MAC_ITERATION;
+    localparam integer PROD_W = 2*WORD_W;
+    localparam integer ACC_W = PROD_W+ITER_W;
+    localparam integer MAG_W = ACC_W+1;
+    localparam [MAG_W-1:0] ONE = {{(MAG_W-1){1'b0}},1'b1};
+    localparam [MAG_W-1:0] HALF = FRAC_W>0 ? ONE << (FRAC_W-1) : 0;
+    localparam [MAG_W-1:0] POS_LIMIT = (ONE << (WORD_W-1))-1'b1;
+    localparam [MAG_W-1:0] NEG_LIMIT = ONE << (WORD_W-1);
 
-	//==================================================================
-	// 수치 함수: 부호 확장 절댓값으로 음수 최솟값과 양/음 tie를 대칭 처리.
-	//==================================================================
-	function signed [ACC_W-1:0] round_shift;
-		input signed [ACC_W-1:0] value;
-		reg signed [RND_W-1:0] extended;
-		reg [RND_W-1:0] magnitude;
-		reg [RND_W-1:0] rounded;
-		begin
-			extended = {value[ACC_W-1],value};
-			magnitude = extended < 0 ? $unsigned(-extended) : $unsigned(extended);
-			rounded = (magnitude + HALF) >> FRAC_W;
-			round_shift = extended < 0 ? -$signed(rounded[ACC_W-1:0]) : $signed(rounded[ACC_W-1:0]);
-		end
-	endfunction
-	function signed [WORD_W-1:0] saturate;
-		input signed [ACC_W-1:0] value;
-		begin
-			if (value > SAT_MAX) begin
-				saturate = SAT_MAX[WORD_W-1:0];
-			end
-			else if (value < SAT_MIN) begin
-				saturate = SAT_MIN[WORD_W-1:0];
-			end
-			else begin
-				saturate = value[WORD_W-1:0];
-			end
-		end
-	endfunction
+    generate
+        if (WORD_W<2 || ITER_W<1 || FRAC_W<0 || FRAC_W>=WORD_W) begin : g_invalid
+            MAC_REQUIRES_VALID_WIDTHS invalid_configuration();
+        end
+    endgenerate
 
-	//==================================================================
-	// Datapath: 첫 항은 bias부터, 이후 항은 저장된 부분합부터 누산한다.
-	//==================================================================
-	reg signed [ACC_W-1:0] accumulator;
-	reg [ITER_W-1:0] input_count;
-	reg pending_enable;
-	reg signed [WORD_W-1:0] pending_data;
-	(* use_dsp="yes" *) wire signed [PROD_W-1:0] product;
-	wire signed [ACC_W-1:0] product_ext;
-	wire signed [ACC_W-1:0] bias_ext;
-	wire signed [ACC_W-1:0] base_sum;
-	wire signed [ACC_W-1:0] total;
-	assign product = in_data * kernel_data;
-	assign product_ext = {{(ACC_W-PROD_W){product[PROD_W-1]}},product};
-	assign bias_ext = {{(ACC_W-WORD_W){bias_data[WORD_W-1]}},bias_data};
-	assign base_sum = input_count == 0 ? (bias_ext <<< FRAC_W) : accumulator;
-	assign total = base_sum + product_ext;
-	assign last_input = enable && in_enable && (iteration != 0) && (input_count == iteration-1'b1);
+    reg [ITER_W-1:0] input_count;
+    reg s0_valid, s0_first, s0_last, s0_bypass;
+    (* use_dsp="yes" *) reg signed [PROD_W-1:0] s0_product;
+    reg signed [WORD_W-1:0] s0_bias, s0_data;
+    reg signed [ACC_W-1:0] accumulator, s1_sum;
+    reg s1_valid;
+    reg [MAG_W-1:0] s2_magnitude, s3_rounded;
+    reg s2_negative, s3_negative, s2_valid, s3_valid;
+    wire accepted = in_enable && (!enable || iteration!=0);
+    wire signed [ACC_W-1:0] product_ext = {{(ACC_W-PROD_W){s0_product[PROD_W-1]}},s0_product};
+    wire signed [ACC_W-1:0] bias_ext = {{(ACC_W-WORD_W){s0_bias[WORD_W-1]}},s0_bias};
+    wire signed [ACC_W-1:0] bypass_ext = {{(ACC_W-WORD_W){s0_data[WORD_W-1]}},s0_data};
+    wire signed [ACC_W-1:0] total = (s0_first ? (bias_ext <<< FRAC_W) : accumulator)+product_ext;
+    wire signed [MAG_W-1:0] extended_sum = {s1_sum[ACC_W-1],s1_sum};
+    assign last_input = enable && in_enable && iteration!=0 && input_count==iteration-1'b1;
 
-	always @(posedge clk or negedge nrst) begin
-		if (!nrst) begin
-			accumulator <= 0;
-			input_count <= 0;
-			pending_enable <= 0;
-			pending_data <= 0;
-			out_enable <= 0;
-			out_data <= 0;
-		end
-		else begin
-			// 1단계 결과를 2단계로 전달한다. 입력 bubble은 valid=0으로 전파한다.
-			out_enable <= pending_enable;
-			if (pending_enable) begin
-				out_data <= pending_data;
-			end
-			pending_enable <= 0;
-			if (in_enable) begin
-				if (!enable) begin
-					accumulator <= 0;
-					input_count <= 0;
-					pending_enable <= 1;
-					pending_data <= in_data;
-				end
-				else if (iteration == 0) begin
-					accumulator <= 0;
-					input_count <= 0;
-				end
-				else if (last_input) begin
-					pending_enable <= 1;
-					pending_data <= saturate(round_shift(total));
-					accumulator <= 0;
-					input_count <= 0;
-				end
-				else begin
-					accumulator <= total;
-					input_count <= input_count + 1'b1;
-				end
-			end
-		end
-	end
+    // 카운터와 valid만 취소하면 진행 중 데이터는 reset 뒤 출력되지 않는다.
+    always @(posedge clk or negedge nrst) begin
+        if (!nrst) begin
+            input_count<=0;
+            s0_valid<=0; s1_valid<=0; s2_valid<=0; s3_valid<=0; out_enable<=0;
+        end else begin
+            s0_valid<=accepted;
+            s1_valid<=s0_valid && (s0_bypass || s0_last);
+            s2_valid<=s1_valid;
+            s3_valid<=s2_valid;
+            out_enable<=s3_valid;
+            if (in_enable) begin
+                if (!enable || iteration==0 || last_input) input_count<=0;
+                else input_count<=input_count+1'b1;
+            end
+        end
+    end
+
+    // S0: 곱셈과 그룹 경계를 함께 등록한다. 첫 항/마지막 항이 데이터와 이동한다.
+    always @(posedge clk) begin
+        if (accepted) begin
+            s0_product<=in_data*kernel_data;
+            s0_bias<=bias_data;
+            s0_data<=in_data;
+            s0_first<=input_count==0;
+            s0_last<=last_input;
+            s0_bypass<=!enable;
+        end
+        // S1: 누산 피드백에는 덧셈만 남긴다. 새 그룹은 첫 항 bias로 시작한다.
+        if (s0_valid) begin
+            if (s0_bypass) s1_sum<=bypass_ext <<< FRAC_W;
+            else begin
+                accumulator<=total;
+                if (s0_last) s1_sum<=total;
+            end
+        end
+        // S2: 최솟값도 안전하게 표현하도록 한 비트 확장 후 절댓값을 취한다.
+        if (s1_valid) begin
+            s2_negative<=extended_sum<0;
+            s2_magnitude<=extended_sum<0 ? $unsigned(-extended_sum) : $unsigned(extended_sum);
+        end
+        // S3: 양/음 모두 정확한 절반은 0에서 먼 방향으로 반올림한다.
+        if (s2_valid) begin
+            s3_negative<=s2_negative;
+            s3_rounded<=(s2_magnitude+HALF)>>FRAC_W;
+        end
+        // S4: magnitude 한계 비교 뒤 WORD_W 폭에서 부호를 복원한다.
+        if (s3_valid) begin
+            if (s3_negative)
+                out_data<=s3_rounded>NEG_LIMIT ? {1'b1,{(WORD_W-1){1'b0}}} : -$signed(s3_rounded[WORD_W-1:0]);
+            else
+                out_data<=s3_rounded>POS_LIMIT ? {1'b0,{(WORD_W-1){1'b1}}} : $signed(s3_rounded[WORD_W-1:0]);
+        end
+    end
 endmodule

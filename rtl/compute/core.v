@@ -16,7 +16,8 @@ module core #(
     // parallelism
     parameter integer PARALLEL_PC                = 1,
     parameter integer PARALLEL_PF                = 1,
-    parameter integer FRAC_W                     = 10
+    parameter integer FRAC_W                     = 10,
+    parameter integer MAX_GAP_ITERATION          = 1024
 )(
     input  wire                                  clk,
     input  wire                                  nrst,
@@ -57,8 +58,8 @@ module core #(
 	wire signed [BITWIDTH-1:0] mac_data, residual_data, relu_data, pooling_data, gap_data;
 	wire use_residual;
 	reg waiting_for_skip;
-	reg mac_held_valid, skip_held_valid;
-	reg signed [BITWIDTH-1:0] mac_held_data, skip_held_data;
+	reg mac_held_valid;
+	reg signed [BITWIDTH-1:0] mac_held_data;
 	wire skip_valid;
 	wire pair_valid;
 	wire residual_in_valid;
@@ -66,47 +67,62 @@ module core #(
 	wire signed [BITWIDTH-1:0] residual_skip;
 
 	//==================================================================
-	// Skip rendezvous: MAC 결과와 후속 skip 중 먼저 온 값을 한 개 저장한다.
-	// 다음 유효 입력이 skip이므로, 공백이 있어도 skip을 MAC 항으로 세지 않는다.
-	// 이전 쌍이 완성될 때까지 결과를 보존하며 새 쌍에 누출하지 않는다.
+	// MAC의 5단계 지연 동안 먼저 도착한 skip을 순서대로 보존한다.
+	// N=1에서 MAC/skip을 매 2클럭 연속 공급해도 여러 skip이 덮어써지지 않는다.
+	// 4-entry FIFO + 늦게 도착하는 skip을 기다릴 MAC 결과 1개를 사용한다.
+	// skip 수신 전에는 다음 MAC 그룹이 시작되지 않아 MAC 보관 1개면 충분하다.
 	//==================================================================
+	localparam integer SKIP_DEPTH=4;
+	reg signed [BITWIDTH-1:0] skip_fifo[0:SKIP_DEPTH-1];
+	reg [1:0] skip_read, skip_write;
+	reg [2:0] skip_count;
+	wire skip_push, skip_pop;
 	assign use_residual = mac_enable && residual_enable;
 	assign skip_valid = waiting_for_skip && in_enable;
-	assign pair_valid = (mac_valid || mac_held_valid) && (skip_valid || skip_held_valid);
+	assign pair_valid = (mac_valid || mac_held_valid) && (skip_count!=0 || skip_valid);
 	assign residual_in_valid = use_residual ? pair_valid : mac_valid;
 	assign residual_main = mac_held_valid ? mac_held_data : mac_data;
-	assign residual_skip = skip_held_valid ? skip_held_data : $signed(in_data);
+	assign residual_skip = skip_count!=0 ? skip_fifo[skip_read] : $signed(in_data);
+	assign skip_pop = use_residual && pair_valid && skip_count!=0;
+	assign skip_push = use_residual && skip_valid && !(pair_valid && skip_count==0);
+
 	always @(posedge clk or negedge nrst) begin
 		if (!nrst) begin
-			waiting_for_skip <= 0;
-			mac_held_valid <= 0;
-			skip_held_valid <= 0;
-			mac_held_data <= 0;
-			skip_held_data <= 0;
-		end
-		else begin
-			if (skip_valid) begin
-				waiting_for_skip <= 0;
-			end
-			else if (use_residual && mac_last_input) begin
-				waiting_for_skip <= 1;
-			end
-			if (!use_residual || pair_valid) begin
-				mac_held_valid <= 0;
-				skip_held_valid <= 0;
-			end
-			else begin
-				if (mac_valid) begin
-					mac_held_valid <= 1;
-					mac_held_data <= mac_data;
-				end
-				if (skip_valid) begin
-					skip_held_valid <= 1;
-					skip_held_data <= in_data;
-				end
+			waiting_for_skip<=0;
+			mac_held_valid<=0;
+			skip_read<=0; skip_write<=0; skip_count<=0;
+		end else begin
+			if (skip_valid) waiting_for_skip<=0;
+			else if (use_residual && mac_last_input) waiting_for_skip<=1;
+			if (!use_residual) begin
+				mac_held_valid<=0;
+				skip_read<=0; skip_write<=0; skip_count<=0;
+			end else begin
+				if (pair_valid) mac_held_valid<=0;
+				else if (mac_valid) mac_held_valid<=1;
+				if (skip_push) skip_write<=skip_write+1'b1;
+				if (skip_pop) skip_read<=skip_read+1'b1;
+				case ({skip_push,skip_pop})
+					2'b10: skip_count<=skip_count+1'b1;
+					2'b01: skip_count<=skip_count-1'b1;
+					default: skip_count<=skip_count;
+				endcase
 			end
 		end
 	end
+	always @(posedge clk) begin
+		if (skip_push) skip_fifo[skip_write]<=in_data;
+		if (use_residual && mac_valid && !pair_valid) mac_held_data<=mac_data;
+	end
+`ifndef SYNTHESIS
+	// 파이프라인 지연을 바꾸는 후속 수정에서 FIFO 용량 위반을 즉시 검출한다.
+	always @(posedge clk) if (nrst) begin
+		if (skip_push && !skip_pop && skip_count==3'd4)
+			$fatal(1,"core skip FIFO overflow");
+		if (use_residual && mac_valid && mac_held_valid)
+			$fatal(1,"core MAC result overwritten while waiting for skip");
+	end
+`endif
 
 	//==================================================================
 	// 실제 연산 모듈 연결. 각 단계의 out_enable을 다음 단계 in_enable로 연결.
@@ -141,7 +157,8 @@ module core #(
 	);
 	general_average_pooling #(
 		.BITWIDTH(BITWIDTH),
-		.BITWIDTH_GAP_ITERATION(BITWIDTH_GAP_ITERATION)
+		.BITWIDTH_GAP_ITERATION(BITWIDTH_GAP_ITERATION),
+		.MAX_GAP_ITERATION(MAX_GAP_ITERATION)
 	) u_gap (
 		.clk(clk), .nrst(nrst), .enable(gap_enable), .iteration(gap_iteration),
 		.in_enable(pooling_valid), .in_data(pooling_data),
