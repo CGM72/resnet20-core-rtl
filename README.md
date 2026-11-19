@@ -22,6 +22,8 @@ GAP는 기본 N=1,2,4,…,1024만 지원하며 shift로 평균을 구합니다. 
 MAC은 5단계, GAP는 4단계이며 core 전체 우회 지연은 15개 레지스터(E0 입력 → E14 출력)입니다.
 포트와 Q5.10 계산은 유지하지만, 1.0.0과 출력 지연·GAP 지원 범위가 다릅니다.
 
+[모듈별 선언 사전](docs/modules/README.md): 각 변수의 역할·기본 폭·갱신 시점과 데이터 흐름을 처음 읽는 사람 기준으로 설명합니다.
+
 ## Waveform과 버전별 실측 결과
 
 [1.1.x 공통 파형 가이드](docs/waveforms/v1.1.0.md) · [버전별 파형 차이](docs/WAVEFORMS.md) · [1.1.0 실측 리포트](reports/v1.1.0/README.md) · [버전별 리포트·패치 검증](reports/README.md)

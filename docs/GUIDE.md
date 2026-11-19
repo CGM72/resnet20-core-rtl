@@ -7,6 +7,8 @@
 
 사용 전제는 **ZedBoard의 Zynq-7000 XC7Z020**, Vivado part **xc7z020clg484-1**, 기본 분석 클럭 **100MHz**입니다. ARM PS와 FPGA PL의 역할, 실제 보드 연결 범위는 [SoC 설명](SOC.md)을 확인하십시오.
 
+변수와 연결을 먼저 이해하려면 [모듈별 선언 사전](modules/README.md)을 읽으십시오.
+
 ## 1. 파일 준비
 
 [1.1.1 ZIP](https://github.com/CGM72/resnet20-core-rtl/raw/refs/heads/main/downloads/resnet20-core-rtl-v1.1.1.zip)을 새 폴더에 풉니다.
