@@ -1,13 +1,15 @@
-# 1.1.0 실행 순서
+# 1.1.1 실행 순서
 
-[현재 1.1.0 waveform](waveforms/v1.1.0.md) · [버전별 waveform](WAVEFORMS.md) · [현재 1.1.0 post_route 리포트](../reports/v1.1.0/README.md) · [버전 비교](../reports/README.md)
+[1.1.x 공통 waveform](waveforms/v1.1.0.md) · [버전별 waveform](WAVEFORMS.md) · [1.1.0 실측과 1.1.1 패치 검증](../reports/v1.1.1/README.md) · [버전 비교](../reports/README.md)
 
 모든 실행 명령은 **Vivado Tcl Console**에 입력합니다.
 `build/...`는 프로젝트 폴더 아래 경로입니다. 기본 검증과 Timing/Utilization 보고서 생성에는 Python이 필요 없습니다.
 
+사용 전제는 **ZedBoard의 Zynq-7000 XC7Z020**, Vivado part **xc7z020clg484-1**, 기본 분석 클럭 **100MHz**입니다. ARM PS와 FPGA PL의 역할, 실제 보드 연결 범위는 [SoC 설명](SOC.md)을 확인하십시오.
+
 ## 1. 파일 준비
 
-[1.1.0 ZIP](https://github.com/CGM72/resnet20-core-rtl/raw/refs/heads/main/downloads/resnet20-core-rtl-v1.1.0.zip)을 새 폴더에 풉니다.
+[1.1.1 ZIP](https://github.com/CGM72/resnet20-core-rtl/raw/refs/heads/main/downloads/resnet20-core-rtl-v1.1.1.zip)을 새 폴더에 풉니다.
 Git을 쓰면 Git Bash에서 다음 순서로 최신 main을 받습니다.
 
 ```bash
@@ -16,7 +18,8 @@ git switch main
 git pull --ff-only origin main
 ```
 
-`main`은 최신 1.1.0이며, 고정 버전은 `v1.0.0`·`v1.1.0` 태그로 보존합니다.
+`main`은 최신 1.1.1이며, 고정 버전은 `v1.0.0`·`v1.1.0`·`v1.1.1` 태그로 보존합니다.
+1.1.1은 논리 변경 없는 가독성 패치입니다. [변경 범위와 동등성 검증](PATCH_1.1.1.md)을 확인하십시오.
 버전별 ZIP은 [README의 다운로드 표](../README.md)를 이용합니다.
 ZIP 파일명에는 버전이 들어가며, 압축 안의 폴더는 기존 경로와 같은 `resnet20-core-rtl/`입니다.
 RTL·TB 파일명과 `fpga::test`·`fpga::analyze` 명령은 동일합니다. 기본 구조입니다.

@@ -7,6 +7,9 @@
 |---|---|---|
 | 1.0.0 | [v1.0.0 리포트](v1.0.0/README.md) | [v1.0.0 waveform](../docs/waveforms/v1.0.0.md) |
 | 1.1.0 | [v1.1.0 리포트](v1.1.0/README.md) | [v1.1.0 waveform](../docs/waveforms/v1.1.0.md) |
+| 1.1.1 | [동등성 검증·새 실측 없음](v1.1.1/README.md) | [1.1.x 공통 waveform](../docs/waveforms/v1.1.0.md) |
+
+1.1.1은 1.1.0의 가독성 패치입니다. 아래 두 버전의 실측 수치는 그대로 보존하며 [1.1.1 검증](v1.1.1/README.md)을 별도로 구분합니다. [대상 SoC](../docs/SOC.md)는 모든 버전에서 동일합니다.
 
 ## Timing 비교
 
