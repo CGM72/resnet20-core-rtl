@@ -3,7 +3,18 @@ source [file normalize [file join [file dirname [info script]] .. .. scripts viv
 set original_root $fpga::root
 set project "";set actions {};set loaded_design {};set properties {};set route_fails 0;set constraint_texts {};set exec_count 0
 proc argument {args key} {set i [lsearch -exact $args $key];if {$i<0} {error "Missing $key"};return [lindex $args [expr {$i+1}]]}
-proc current_project {args} {if {$::project eq ""} {error {ERROR: [Coretcl 2-88] No projects are currently open.}};return $::project}
+proc get_projects {args} {
+ if {$::project eq ""} {return {}}
+ return [list $::project]
+}
+set empty_project_queries 0
+proc current_project {args} {
+ if {$::project eq ""} {
+  incr ::empty_project_queries
+  error {ERROR: [Coretcl 2-88] No projects are currently open.}
+ }
+ return $::project
+}
 proc create_project {args} {set ::project [lindex $args 1];lappend ::actions create}
 proc set_property {args} {dict set ::properties [list [lindex $args end] [lindex $args 0]] [lindex $args 1]}
 proc get_filesets {name} {return $name}
@@ -104,6 +115,10 @@ proc exec {args} {
  return {STUB SNR}
 }
 set report_python {C:/Python Install/python.exe}
+fpga::analyze core
+fpga::finish
+if {"close_sim" in $actions} {error "Closing an analysis project must not close a simulation"}
+reset_mock
 set report_path [fpga::report 20.0 $report_python xsim]
 if {$report_path ne [file join $fpga::root reports core_report.txt]} {error "Wrong text report destination"}
 set fd [open $report_path r];set report_text [read $fd];close $fd
@@ -128,6 +143,8 @@ fpga::report 25.0 $report_python xsim
 if {"simulate" ni $actions || "synth" ni $actions} {error "Tool version change should remeasure both results"}
 rename exec {}
 rename workflow_stub_exec exec
+if {$empty_project_queries} {error "current_project queried with no projects open"}
+puts "PASS analyze -> finish -> report without querying an empty current project"
 puts "PASS combined core report export and cache reuse"
 # Custom source/config reuse remains supported.
 if {[llength $argv]} {
