@@ -4,14 +4,7 @@ Tcl 명령은 Vivado Tcl Console에서 실행합니다. 기본 테스트와 보�
 
 ## 소스 준비
 
-[버전별 패치 내역과 다운로드](PATCHES.md)에서 소스를 선택합니다. ZIP은 새 폴더에 풀고, Git 작업 복사본에서는 아래 명령으로 태그를 가져옵니다.
-
-```bash
-git fetch origin --tags
-git switch --detach v1.1.1
-```
-
-최신 개발 소스를 받으려면 `git switch main` 후 `git pull --ff-only origin main`을 실행합니다.
+[GitHub Releases](https://github.com/CGM72/resnet20-core-rtl/releases/tag/v1.2.3)의 **Assets**에서 `resnet20-core-rtl-v1.2.3.zip`을 받아 새 폴더에 풉니다.
 
 ## 실행기 불러오기
 

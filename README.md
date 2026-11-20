@@ -6,7 +6,7 @@
 | --- | --- |
 | [실행 가이드](docs/GUIDE.md) | 소스 준비와 Vivado Tcl 명령 |
 | [분석 가이드](docs/ANALYSIS.md) | 기능 테스트, 파형, 타이밍, Utilization, SNR 결과 판정 |
-| [버전별 패치 내역](docs/PATCHES.md) | 변경 사항, 고정 태그, 버전별 ZIP |
+| [버전별 패치 내역](docs/PATCHES.md) | 변경 사항과 [버전별 다운로드](https://github.com/CGM72/resnet20-core-rtl/releases) |
 | [SoC 가이드](docs/SOC.md) | 대상 보드와 PS·PL 통합 범위 |
 | [아키텍처](docs/architecture.md) | RTL 구조, 인터페이스, 수치, 지연 |
 
@@ -21,6 +21,5 @@
 | [fpga/](fpga/) | FPGA 지원 파일 |
 | [verification/](verification/) | 기준 모델, 가중치, 검증 도구 |
 | [reports/](reports/) | 버전별 측정 자료와 비교표 |
-| [downloads/](https://github.com/CGM72/resnet20-core-rtl/tree/main/downloads) | 버전별 소스 ZIP |
 | [project.tcl](project.tcl) | FPGA part, 클럭, RTL 소스, 분석 대상 설정 |
 | [VERSION](VERSION) | 체크아웃한 소스 버전 |
