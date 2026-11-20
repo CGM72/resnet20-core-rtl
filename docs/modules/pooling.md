@@ -1,6 +1,6 @@
 # pooling.v 선언 사전 — 1.1.1
 
-[모듈 목록·읽는 법](README.md) · [실제 RTL](../../rtl/compute/pooling.v) · [파형 확인](../waveforms/v1.1.0.md)
+[모듈 목록·읽는 법](README.md) · [실제 RTL](../../rtl/compute/pooling.v) · [파형 확인](../ANALYSIS.md)
 
 N개의 유효 입력 중 signed 최대값 하나를 만든다. 어떤 값들을 같은 창으로 묶을지, stride/주소를 어떻게 정할지는 외부가 맡는다.
 

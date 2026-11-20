@@ -1,6 +1,6 @@
 # core.v 선언 사전 — 1.1.1
 
-[모듈 목록·읽는 법](README.md) · [실제 RTL](../../rtl/compute/core.v) · [파형 확인](../waveforms/v1.1.0.md)
+[모듈 목록·읽는 법](README.md) · [실제 RTL](../../rtl/compute/core.v) · [파형 확인](../ANALYSIS.md)
 
 외부에서 순서와 주소를 맞춰 보낸 연산 항을 MAC→Residual→ReLU→MaxPool→GAP로 연결한다. 레이어 실행 순서나 메모리 주소를 만드는 Controller는 이 모듈 밖에 있다.
 

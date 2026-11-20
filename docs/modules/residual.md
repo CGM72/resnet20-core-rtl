@@ -1,6 +1,6 @@
 # residual.v 선언 사전 — 1.1.1
 
-[모듈 목록·읽는 법](README.md) · [실제 RTL](../../rtl/compute/residual.v) · [파형 확인](../waveforms/v1.1.0.md)
+[모듈 목록·읽는 법](README.md) · [실제 RTL](../../rtl/compute/residual.v) · [파형 확인](../ANALYSIS.md)
 
 정렬된 main과 skip을 더하고 INT16 범위로 포화한다. 서로 다른 위치/채널을 맞춰 주는 기능은 포함하지 않는다.
 

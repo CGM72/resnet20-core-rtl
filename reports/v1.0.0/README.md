@@ -1,6 +1,6 @@
 # 1.0.0 배치·배선 후 리포트
 
-[전체 버전 비교](../README.md) · [waveform 가이드](../../docs/waveforms/v1.0.0.md)
+[전체 버전 비교](../README.md) · [waveform 가이드](../../docs/ANALYSIS.md)
 
 사용자 제공 이미지 기준, 10ns(100MHz), 모듈 OOC post_route 결과입니다. core·MAC·GAP의 Setup 위반이 있습니다.
 

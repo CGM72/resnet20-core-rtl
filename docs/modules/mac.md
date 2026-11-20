@@ -1,6 +1,6 @@
 # mac.v 선언 사전 — 1.1.1
 
-[모듈 목록·읽는 법](README.md) · [실제 RTL](../../rtl/compute/mac.v) · [파형 확인](../waveforms/v1.1.0.md)
+[모듈 목록·읽는 법](README.md) · [실제 RTL](../../rtl/compute/mac.v) · [파형 확인](../ANALYSIS.md)
 
 한 그룹의 입력×가중치를 더해 내적을 만든다. Conv/FC의 항 순서와 개수는 외부에서 정한다. 같은 파일에 bias=0 wrapper인 mac과 실제 누산 연산부 mac_accumulate가 있다.
 

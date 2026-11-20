@@ -1,4 +1,4 @@
-# ResNet-20 core 1.1.1
+# ResNet-20 core 1.2.1
 
 [선언된 변수의 역할](modules/README.md)
 
@@ -20,14 +20,22 @@ flowchart LR
     G --> OUT[out_enable / out_data]
 ```
 
+## 기본 프로젝트 구성
+
 | 파일 | 기능 |
 |---|---|
+| project.tcl | FPGA part, 분석 클럭, RTL 소스, 모듈별 target 설정 |
 | rtl/compute/core.v | 연산 모듈 연결과 MAC/skip 정렬 |
-| mac.v | mac wrapper와 mac_accumulate: 곱셈 → 누산 → 절댓값 → 반올림 → 포화/부호 복원 |
-| residual.v | main+skip 합과 `saturate()` |
-| relu.v | 음수 제거 / 우회 |
-| pooling.v | N개 유효 입력의 signed 최대값 |
-| general_average_pooling.v | 합 수집 → 절댓값 → 반올림/shift → 부호 복원 |
+| rtl/compute/mac.v | mac wrapper와 mac_accumulate: 곱셈 → 누산 → 절댓값 → 반올림 → 포화/부호 복원 |
+| rtl/compute/residual.v | main+skip 합과 `saturate()` |
+| rtl/compute/relu.v | 음수 제거 / 우회 |
+| rtl/compute/pooling.v | N개 유효 입력의 signed 최대값 |
+| rtl/compute/general_average_pooling.v | 합 수집 → 절댓값 → 반올림/shift → 부호 복원 |
+| tb/tb_<모듈>/ | 독립 테스트벤치 `.sv`와 소스 목록 `.f` |
+| tb/common/ | 공통 테스트벤치 코드와 사전 계산 기준값 |
+| scripts/vivado.tcl | 시뮬레이션·합성·분석 실행기 |
+
+기본 target은 위의 연산 RTL 6개 파일에서 필요한 소스를 선택합니다. 원본 AXI·controller RTL은 별도 통합 대상입니다.
 
 기본 단일 lane·INT16·Q5.10, MAC 누산 48-bit, GAP 합 26-bit입니다. GAP 합 폭은 BITWIDTH+log2(MAX_GAP_ITERATION)입니다.
 PARALLEL_PC/PF는 1만 지원합니다. 변경만으로 병렬 MAC이 늘어나지 않습니다.
@@ -97,7 +105,7 @@ GAP: S0 accumulator / s0_sum / s0_shift
 N=1의 연속 MAC/skip 쌍과 늦은 skip 모두 입력 순서를 보존합니다. FIFO 용량은 현재 MAC 5단계에 맞춰 설계되었습니다.
 후속 구현에서 MAC 지연을 더 늘리면 FIFO 깊이와 core 정렬도 다시 검토해야 합니다.
 
-GAP에는 나눗셈 연산자가 없습니다. 반올림과 shift를 별도 단계에서 수행합니다.
+1.1.0에서 GAP의 가변 나눗셈을 shift로 바꾸고 MAC의 곱셈·누산·반올림·포화를 파이프라인 단계로 나눴습니다. 테스트벤치는 MAC 5단계와 GAP 4단계의 지연을 기준으로 검사합니다.
 실제 자원과 critical path는 Vivado 배치배선 결과로 확인해야 합니다.
 
 ## 제공 데이터 검사

@@ -1,6 +1,6 @@
 # general_average_pooling.v 선언 사전 — 1.1.1
 
-[모듈 목록·읽는 법](README.md) · [실제 RTL](../../rtl/compute/general_average_pooling.v) · [파형 확인](../waveforms/v1.1.0.md)
+[모듈 목록·읽는 법](README.md) · [실제 RTL](../../rtl/compute/general_average_pooling.v) · [파형 확인](../ANALYSIS.md)
 
 같은 채널의 N개 공간 값을 합산해 반올림 평균 하나를 만든다. 입출력 Q scale은 같다.
 

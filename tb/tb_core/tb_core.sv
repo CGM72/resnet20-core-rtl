@@ -38,6 +38,9 @@ module tb_core #(
 
     int input_gap = 0;
     string vector_dir = "vectors";
+    string snr_dir;
+    bit extract_snr;
+    int snr_summary;
 
     core dut (
         .clk               (clk),
@@ -116,6 +119,11 @@ module tb_core #(
             $fatal(1, "OUTPUT_FRAC_BITS must be between 0 and 15");
         if ($value$plusargs("vectors_dir=%s", vector_dir))
             $display("[ INFO ] vectors=%s", vector_dir);
+        extract_snr = $value$plusargs("snr_dir=%s", snr_dir);
+        if (extract_snr) begin
+            snr_summary = $fopen({snr_dir, "/scoreboard_results.txt"}, "w");
+            if (!snr_summary) $fatal(1, "Cannot open SNR summary in %s", snr_dir);
+        end
         weights_consumed = 0;
         $display("[ INFO ] ResNet-20 Q5.10 input_gap=%0d skip_delay=%0d output_frac_bits=%0d",
                  input_gap, SKIP_DELAY_CYCLES, OUTPUT_FRAC_BITS);
@@ -138,6 +146,10 @@ module tb_core #(
         $display("");
         check_logit_snr();
         idle(2);
+        if (extract_snr) begin
+            $fdisplay(snr_summary, "complete");
+            $fclose(snr_summary);
+        end
         $display("[ PASS ] ALL TESTS PASSED");
         $finish;
     end

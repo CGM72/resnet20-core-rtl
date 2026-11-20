@@ -52,25 +52,38 @@ def relu(tensor):
     return [[max(value, 0.0) for value in plane] for plane in channels], height, width
 
 
-def block(tensor, weights, out_channels, stride):
+def block(tensor, weights, out_channels, stride, name, observe):
     skip = tensor
     if stride == 2:
         skip = conv(tensor, weights, out_channels, size=1, stride=2, pad=0)
+        observe(name + ".projection", skip)
     first = relu(conv(tensor, weights, out_channels, stride=stride))
+    observe(name + ".conv1", first)
     main, height, width = conv(first, weights, out_channels)
     added = [[a + b for a, b in zip(channel, shortcut)]
              for channel, shortcut in zip(main, skip[0])]
     return relu((added, height, width))
 
 
-def infer(feature, weights):
+def infer(feature, weights, checkpoint=None):
+    def observe(name, tensor):
+        if checkpoint is not None:
+            planes, _, _ = tensor
+            checkpoint(name, [value for pixel in zip(*planes, strict=True) for value in pixel])
+
     channels = [[word / SCALE for word in feature[c::3]] for c in range(3)]
     tensor = relu(conv((channels, 32, 32), weights, 16))
-    for out_channels in (16, 32, 64):
+    observe("stem", tensor)
+    for stage, out_channels in enumerate((16, 32, 64), 1):
         for index in range(3):
             stride = 2 if out_channels != 16 and index == 0 else 1
-            tensor = block(tensor, weights, out_channels, stride)
+            name = f"layer{stage}.{index}"
+            tensor = block(tensor, weights, out_channels, stride, name, observe)
+            if (stage, index) != (3, 2):
+                observe(name + ".conv2", tensor)
     pooled = [sum(plane) / len(plane) for plane in tensor[0]]
+    if checkpoint is not None:
+        checkpoint(name + ".conv2", pooled)
     kernels, biases = weights.affine(64, 10, 1)
     if weights.offset != len(weights.words):
         raise ValueError("Unused weight words")

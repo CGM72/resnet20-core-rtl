@@ -5,9 +5,9 @@
 
 | 버전 | 원본 이미지와 상세 표 | 파형 확인 가이드 |
 |---|---|---|
-| 1.0.0 | [v1.0.0 리포트](v1.0.0/README.md) | [v1.0.0 waveform](../docs/waveforms/v1.0.0.md) |
-| 1.1.0 | [v1.1.0 리포트](v1.1.0/README.md) | [v1.1.0 waveform](../docs/waveforms/v1.1.0.md) |
-| 1.1.1 | [동등성 검증·새 실측 없음](v1.1.1/README.md) | [1.1.x 공통 waveform](../docs/waveforms/v1.1.0.md) |
+| 1.0.0 | [v1.0.0 리포트](v1.0.0/README.md) | [v1.0.0 waveform](../docs/ANALYSIS.md) |
+| 1.1.0 | [v1.1.0 리포트](v1.1.0/README.md) | [v1.1.0 waveform](../docs/ANALYSIS.md) |
+| 1.1.1 | [동등성 검증·새 실측 없음](v1.1.1/README.md) | [1.1.x 공통 waveform](../docs/ANALYSIS.md) |
 
 1.1.1은 1.1.0의 가독성 패치입니다. 아래 두 버전의 실측 수치는 그대로 보존하며 [1.1.1 검증](v1.1.1/README.md)을 별도로 구분합니다. [대상 SoC](../docs/SOC.md)는 모든 버전에서 동일합니다.
 
@@ -53,7 +53,7 @@ FF는 Slice Registers입니다. `—`는 이미지에 열이 보이지 않아 �
 
 1.1.0은 첨부된 OOC post_route 결과에서 100MHz 목표의 표시된 타이밍 조건을 만족했습니다.
 가변 나눗셈 제거와 MAC 파이프라인 변경 후의 개선을 보여 주지만, GAP 지원 크기는 기본 1,2,4,…,1024로 제한되고 core 전체 우회는 E0→E14로 늘었습니다.
-지연/지원 범위까지 같아진 것은 아니므로 [버전별 waveform 차이](../docs/WAVEFORMS.md)를 함께 확인하십시오.
+지연/지원 범위까지 같아진 것은 아니므로 [버전별 waveform 차이](../docs/ANALYSIS.md)를 함께 확인하십시오.
 
 이 결과만으로 최대 동작 주파수, 전체 시스템 타이밍 충족, FPS 또는 CIFAR-10 정확도를 계산하지 않습니다.
 기본 실행기의 XDC는 `create_clock`이며, 외부 입출력·reset 제약은 시스템 구성에서 완성해야 합니다.

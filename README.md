@@ -1,77 +1,26 @@
-# ResNet-20 core 1.1.1
+# ResNet-20 Core RTL
 
-[전체 ZIP](https://github.com/CGM72/resnet20-core-rtl/raw/refs/heads/main/downloads/resnet20-core-rtl-v1.1.1.zip) · [순서대로 실행하는 가이드](docs/GUIDE.md)
+## 문서 구성
 
-**사용 보드/SoC:** ZedBoard / Zynq-7000 XC7Z020 (`xc7z020clg484-1`). core는 PL에서 동작하며 기본 OOC 목표는 100MHz입니다. [PS·PL 역할과 통합 전제](docs/SOC.md)
+| 문서 | 내용 |
+| --- | --- |
+| [실행 가이드](docs/GUIDE.md) | 소스 준비와 Vivado Tcl 명령 |
+| [분석 가이드](docs/ANALYSIS.md) | 기능 테스트, 파형, 타이밍, Utilization, SNR 결과 판정 |
+| [버전별 패치 내역](docs/PATCHES.md) | 변경 사항, 고정 태그, 버전별 ZIP |
+| [SoC 가이드](docs/SOC.md) | 대상 보드와 PS·PL 통합 범위 |
+| [아키텍처](docs/architecture.md) | RTL 구조, 인터페이스, 수치, 지연 |
 
-`core.v`와 MAC·Residual·ReLU·MaxPool·GAP를 구현했습니다.
-기본 수치 형식은 signed INT16/Q5.10, 단일 MAC입니다. Controller/AXI/DMA는 별도 영역입니다.
+## 폴더 구성
 
-`main`은 최신 **1.1.1** 코드이며 `release/1.1.1` 브랜치에서도 확인할 수 있습니다. 고정 태그는 `v1.0.0`, `v1.1.0`, `v1.1.1`입니다.
-1.1.1은 [코드 가독성·SoC 설명 패치](docs/PATCH_1.1.1.md)이며 1.1.0의 기능·처리율·지연·합성 논리를 유지합니다.
-버전은 ZIP 파일명과 `VERSION`에 표시하며, RTL·TB 파일명과 Vivado 명령은 유지합니다.
-
-| 버전 | 소스 | 다운로드 파일 |
-|---|---|---|
-| 1.1.1 (최신) | [main](https://github.com/CGM72/resnet20-core-rtl/tree/main) · [release/1.1.1](https://github.com/CGM72/resnet20-core-rtl/tree/release/1.1.1) · [v1.1.1](https://github.com/CGM72/resnet20-core-rtl/tree/v1.1.1) | [resnet20-core-rtl-v1.1.1.zip](https://github.com/CGM72/resnet20-core-rtl/raw/refs/heads/main/downloads/resnet20-core-rtl-v1.1.1.zip) |
-| 1.1.0 | [release/1.1.0](https://github.com/CGM72/resnet20-core-rtl/tree/release/1.1.0) · [v1.1.0](https://github.com/CGM72/resnet20-core-rtl/tree/v1.1.0) | [resnet20-core-rtl-v1.1.0.zip](https://github.com/CGM72/resnet20-core-rtl/raw/refs/heads/main/downloads/resnet20-core-rtl-v1.1.0.zip) |
-| 1.0.0 | [release/1.0.0](https://github.com/CGM72/resnet20-core-rtl/tree/release/1.0.0) · [v1.0.0](https://github.com/CGM72/resnet20-core-rtl/tree/v1.0.0) | [resnet20-core-rtl-v1.0.0.zip](https://github.com/CGM72/resnet20-core-rtl/raw/refs/heads/main/downloads/resnet20-core-rtl-v1.0.0.zip) |
-
-아래 설명은 1.1.1 기준이며, 파형 신호와 지연은 1.1.0과 같습니다.
-GAP는 기본 N=1,2,4,…,1024만 지원하며 shift로 평균을 구합니다. 비지원 N은 입력을 폐기합니다.
-MAC은 5단계, GAP는 4단계이며 core 전체 우회 지연은 15개 레지스터(E0 입력 → E14 출력)입니다.
-포트와 Q5.10 계산은 유지하지만, 1.0.0과 출력 지연·GAP 지원 범위가 다릅니다.
-
-[모듈별 선언 사전](docs/modules/README.md): 각 변수의 역할·기본 폭·갱신 시점과 데이터 흐름을 처음 읽는 사람 기준으로 설명합니다.
-
-## Waveform과 버전별 실측 결과
-
-[1.1.x 공통 파형 가이드](docs/waveforms/v1.1.0.md) · [버전별 파형 차이](docs/WAVEFORMS.md) · [1.1.0 실측 리포트](reports/v1.1.0/README.md) · [버전별 리포트·패치 검증](reports/README.md)
-
-사용자 제공 10ns(100MHz) OOC post_route 결과에서 core WNS는 **−58.757ns → +2.716ns**, LUT는 **1129 → 609**, FF는 **413 → 544**입니다.
-1.1.0은 6개 분석 top 모두 표시된 Setup/Hold/Pulse Width 위반 endpoint가 0입니다. 원본 이미지와 측정 조건은 리포트에 있습니다. 1.1.1의 별도 배치·배선 결과는 새로 측정하지 않았습니다.
-
-## 1. 실행기 불러오기
-
-ZIP은 새 폴더에 풉니다. Vivado에서 열린 사용자 프로젝트를 저장하고 닫은 뒤 Tcl Console에 입력합니다.
-
-```tcl
-source {C:/Users/idec/Desktop/Chae/Project_ResNet/codes/resnet20-core-rtl/scripts/vivado.tcl}
-```
-
-## 2. 모듈별 기능 검증 → 보고서 생성
-
-아래는 ReLU 예시입니다. **기능 검증과 .rpt 생성에는 Python이 필요 없습니다.**
-
-```tcl
-fpga::test relu
-# ALL TESTS PASSED 확인
-fpga::finish
-fpga::analyze relu
-```
-
-| 대상 | 실제 RTL | 독립 TB | 기능 검증 | Timing/Utilization 보고서 |
-|---|---|---|---|---|
-| core | rtl/compute/core.v | tb_core_stream | fpga::test core | fpga::analyze core |
-| MAC | rtl/compute/mac.v | tb_mac | fpga::test mac | fpga::analyze mac |
-| Residual | rtl/compute/residual.v | tb_residual | fpga::test residual | fpga::analyze residual |
-| ReLU | rtl/compute/relu.v | tb_relu | fpga::test relu | fpga::analyze relu |
-| MaxPool | rtl/compute/pooling.v | tb_pooling | fpga::test pooling | fpga::analyze pooling |
-| GAP | rtl/compute/general_average_pooling.v | tb_general_average_pooling | fpga::test general_average_pooling | fpga::analyze general_average_pooling |
-
-core 내부에서 bias를 받는 MAC 연산부는 같은 파일의 `mac_accumulate`입니다.
-그 연산부만 분석하려면 `fpga::analyze mac_accumulate`를 사용합니다. tb_mac은 두 MAC 경로를 모두 검사합니다.
-
-## 3. 결과 확인
-
-- 기능 검증: `build/sim/<TB>/`의 로그/파형과 Console의 PASS.
-- 배치배선 후 Timing: `build/analysis/<top>/<실행폴더>/timing/post_route.rpt`
-- 배치배선 후 Utilization: 같은 실행 폴더의 `utilization/post_route.rpt`
-- 마지막 완료 폴더: `build/analysis/<top>/latest.txt`
-
-PNG가 필요할 때만 Python/Pillow를 준비하고 `fpga::images relu`를 실행합니다.
-다음 모듈을 실행하기 전 `fpga::finish`로 현재 생성 프로젝트를 닫습니다.
-
-[가이드](docs/GUIDE.md)에 준비·검증·분석·저장 위치·PNG 변환·모듈 교체 순서를 적었습니다.
-[core 구조와 입력 규약](docs/architecture.md)도 확인하십시오.
-실제 Vivado 배치배선 결과로 타이밍을 판정해야 하며, 기능 PASS만으로 100MHz 충족을 주장하지 않습니다.
+| 경로 | 내용 |
+| --- | --- |
+| [docs/](docs/) | 가이드와 모듈별 선언 사전 |
+| [rtl/compute/](rtl/compute/) | core와 연산 모듈 RTL |
+| [tb/](tb/) | 독립 모듈·core 연결·전체 모델 테스트벤치 |
+| [scripts/](scripts/) | Vivado Tcl 실행기 |
+| [fpga/](fpga/) | FPGA 지원 파일 |
+| [verification/](verification/) | 기준 모델, 가중치, 검증 도구 |
+| [reports/](reports/) | 버전별 측정 자료와 비교표 |
+| [downloads/](https://github.com/CGM72/resnet20-core-rtl/tree/main/downloads) | 버전별 소스 ZIP |
+| [project.tcl](project.tcl) | FPGA part, 클럭, RTL 소스, 분석 대상 설정 |
+| [VERSION](VERSION) | 체크아웃한 소스 버전 |

@@ -148,6 +148,12 @@ namespace eval fpga {
                 }
             }
         }
+        if {$tb eq "tb_core"} {
+            set snr_dir [file join $directory snr]
+            file mkdir $snr_dir
+            file delete -force [file join $snr_dir scoreboard_results.txt] [file join $snr_dir results.json]
+            append options " -testplusarg \"snr_dir=$snr_dir\""
+        }
         puts "Design top=[dict get $cfg top]; TB=$tb"
         create_project -force "sim_$tb" $directory -part [dict get $cfg part]
         set_property target_language Verilog [current_project]

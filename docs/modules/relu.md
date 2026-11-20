@@ -1,6 +1,6 @@
 # relu.v 선언 사전 — 1.1.1
 
-[모듈 목록·읽는 법](README.md) · [실제 RTL](../../rtl/compute/relu.v) · [파형 확인](../waveforms/v1.1.0.md)
+[모듈 목록·읽는 법](README.md) · [실제 RTL](../../rtl/compute/relu.v) · [파형 확인](../ANALYSIS.md)
 
 음수를 0으로 바꾸고 0/양수는 유지한다. enable=0이면 음수도 그대로 전달한다.
 

@@ -85,6 +85,7 @@
         end
         finish_compare();
         check_layer_reference(index);
+        if (extract_snr) dump_layer_output(index);
         // Projection writes the shortcut bank while the main path keeps its input.
         for (int i = 0; i < result_words; i++) begin
             if (layer.op == OP_PROJECTION) shortcut[i] = actual[i];
