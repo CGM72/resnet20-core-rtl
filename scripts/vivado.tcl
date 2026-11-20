@@ -445,7 +445,7 @@ namespace eval fpga {
 
     proc report {{clock_period ""}} {
         variable root
-        measure_and_finish analyze core $clock_period
+        analyze core $clock_period
         return [file join $root reports core_report.html]
     }
 

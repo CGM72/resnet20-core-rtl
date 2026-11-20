@@ -149,10 +149,15 @@ set html [fpga::read_text_file $report_path]
 foreach label {{Design Timing Summary} {<h3>Setup</h3>} {<h3>Hold</h3>} {<h3>Pulse Width</h3>} {VIOLATED} {LUT as Logic} {(13300)} {<td>235</td>}} {
  if {[string first $label $html] < 0} {error "Missing HTML report item $label"}
 }
-if {"simulate" in $actions || $exec_count || $project ne "" || [regexp {SNR|STUB TIMING DETAILS|F7 Muxes} $html]} {
+if {"simulate" in $actions || $exec_count || [regexp {SNR|STUB TIMING DETAILS|F7 Muxes} $html]} {
  error "Implementation report must skip simulation, Python and SNR"
 }
 if {![string match {* -period 20.0 *} [lindex $constraint_texts end]]} {error "Report did not forward period"}
+if {$project ne "design_core" || "close_project" in $actions} {
+ error "Report must leave the analysis project open"
+}
+fpga::finish
+if {$project ne ""} {error "Finish did not close the report analysis project"}
 reset_mock
 set sim_report [fpga::report_sim $report_python xsim]
 set fd [open $sim_report r];set sim_text [read $fd];close $fd

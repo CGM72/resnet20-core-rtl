@@ -64,10 +64,10 @@ fpga::report
 ```
 
 `fpga::analyze core`도 배치·배선 후 같은 보고서를 저장하므로 연달아 실행할 필요가 없습니다.
-`fpga::analyze core`는 분석 프로젝트를 열어 두며, `fpga::report`는 작업 후 자동으로 닫습니다.
+`fpga::report`와 `fpga::analyze core`는 보고서를 저장한 뒤 분석 프로젝트를 열어 둡니다. 다음 분석을 시작할 때는 `fpga::finish`로 닫습니다.
 분석 클럭 제약을 지정하려면 `fpga::report 20.0`을 실행합니다. 이 흐름에는 Python이 필요 없습니다.
 브라우저에서 `reports/core_report.html`을 열면 Vivado 화면과 비슷하게 Setup·Hold·Pulse Width가 나란히 표시됩니다. Utilization 표에는 사용량과 가용량을 표시합니다.
-텍스트에는 Setup·Hold·Pulse Width의 slack, 위반 endpoint와 상태, 그리고 LUT·FF·BRAM·DSP의 사용량과 사용률을 저장합니다.
+HTML에서 slack, 위반 endpoint와 상태, 그리고 LUT·FF·BRAM·DSP의 사용량과 사용률을 확인합니다.
 Vivado 원본은 해당 `build/analysis/core/run_*/` 아래에 있습니다.
 
 ## SNR·latency 별도 저장
