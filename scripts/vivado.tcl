@@ -78,7 +78,7 @@ namespace eval fpga {
                 return $command
             }
         }
-        error {Python 3.10+ was not found. Pass its executable path to fpga::report {} {C:/.../python.exe} or fpga::images <target> {C:/.../python.exe}, or set python in project.tcl.}
+        error {Python 3.10+ was not found. Pass its executable path to fpga::report_sim {C:/.../python.exe} or fpga::images <target> {C:/.../python.exe}, or set python in project.tcl.}
     }
 
     proc require_closed {} {
@@ -297,6 +297,10 @@ namespace eval fpga {
         set fd [open [file join $base latest.txt] w]; puts $fd $directory; close $fd
         puts "Timing report: [file join $directory timing post_route.rpt]"
         puts "Utilization report: [file join $directory utilization post_route.rpt]"
+        if {$target eq "core"} {
+            set header [list "Implementation: measured | Vivado [version -short] | [dict get $cfg part] | $clock_period ns"                 "Implementation source: $directory"]
+            write_text_report core_report.txt $header [list                 "Timing (post-route)" [file join $directory timing post_route.rpt]                 "Utilization (post-route)" [file join $directory utilization post_route.rpt]]
+        }
         return $directory
     }
 
@@ -320,11 +324,52 @@ namespace eval fpga {
         return $result
     }
 
-    proc report {{clock_period ""} {python_exe ""} {simulator auto}} {
+    proc write_text_report {name header sections} {
+        variable root
+        set version_file [open [file join $root VERSION] r]
+        set release_version [string trim [read $version_file]]
+        close $version_file
+        if {![regexp {^[0-9]+\.[0-9]+\.[0-9]+$} $release_version]} {error "Invalid VERSION"}
+        set output [file join $root reports $name]
+        set version_report [file join $root reports generated "v$release_version" $name]
+        file mkdir [file dirname $output]
+        set temporary [file join [file dirname $output] ".core-report-[pid]-[clock clicks].tmp"]
+        set fd [open $temporary {WRONLY CREAT EXCL}]
+        set failed [catch {
+            puts $fd "ResNet-20 core report"
+            puts $fd "Version: $release_version"
+            foreach line $header {puts $fd $line}
+            foreach {title path} $sections {
+                puts $fd "\n=== $title ==="
+                set input [open $path r]
+                set copy_failed [catch {fcopy $input $fd} copy_result copy_options]
+                close $input
+                if {$copy_failed} {return -options $copy_options $copy_result}
+            }
+        } result options]
+        set close_failed [catch {close $fd} close_result close_options]
+        if {!$failed && !$close_failed} {
+            set failed [catch {file rename -force $temporary $output} result options]
+        }
+        if {$failed || $close_failed} {file delete -force $temporary}
+        if {$failed} {return -options $options $result}
+        if {$close_failed} {return -options $close_options $close_result}
+        file mkdir [file dirname $version_report]
+        file copy -force $output $version_report
+        puts "Core report: $output"
+        puts "Version report: $version_report"
+        return $output
+    }
+
+    proc report {{clock_period ""}} {
+        variable root
+        measure_and_finish analyze core $clock_period
+        return [file join $root reports core_report.txt]
+    }
+
+    proc report_sim {{python_exe ""} {simulator auto}} {
         variable root
         set cfg [config core]
-        if {$clock_period eq ""} {set clock_period [dict get $cfg period_ns]}
-        set clock_period [expr {double([period $clock_period])}]
         set python [python_command $python_exe]
         set helper [file join $root scripts report_tools.py]
         set cache [file join $root build report_cache]
@@ -338,7 +383,7 @@ namespace eval fpga {
         switch -- $simulator {
             xsim {set simulator_version $vivado_version}
             verilator {
-                if {$verilator eq ""} {error "Verilator is not on PATH. Use fpga::report {} {} xsim."}
+                if {$verilator eq ""} {error "Verilator is not on PATH. Use fpga::report_sim {} xsim."}
                 set simulator_version [exec $verilator --version]
             }
             default {error "Simulator must be auto, xsim or verilator"}
@@ -369,14 +414,6 @@ namespace eval fpga {
         set sim_key [exec {*}$python -E $helper key             --value=[list $simulator $simulator_version $part $rtl $includes $defines $vectors $weights]             -- {*}$sim_inputs]
         set sim_pointer [file join $cache "sim-$sim_key.txt"]
         set snr_dir [cached_report_run $sim_pointer {snr.txt latency.txt results.json scoreboard_results.txt}]
-        set xdc [dict get $cfg xdc_files]
-        set timing_key [exec {*}$python -E $helper key             --value=[list $vivado_version $part [dict get $cfg top] [dict get $cfg clock_port]                 $clock_period $rtl $includes $defines $xdc]             -- $launcher {*}$common_inputs {*}$xdc]
-        set timing_pointer [file join $cache "timing-$timing_key.txt"]
-        set directory [cached_report_run $timing_pointer {timing/post_route.rpt utilization/post_route.rpt}]
-        if {$directory eq "" || ($simulator eq "xsim" && $snr_dir eq "")} {
-            require_closed
-        }
-
         set simulation reused
         if {$snr_dir eq ""} {
             set simulation measured
@@ -404,52 +441,8 @@ namespace eval fpga {
             close $fd
         }
 
-        set implementation reused
-        if {$directory eq ""} {
-            set implementation measured
-            puts "Running core synthesis, placement and routing"
-            set directory [measure_and_finish analyze core $clock_period]
-            set fd [open $timing_pointer w]
-            puts $fd $directory
-            close $fd
-        }
-
-        set version_file [open [file join $root VERSION] r]
-        set release_version [string trim [read $version_file]]
-        close $version_file
-        if {![regexp {^[0-9]+\.[0-9]+\.[0-9]+$} $release_version]} {error "Invalid VERSION"}
-        set output [file join $root reports core_report.txt]
-        set version_report [file join $root reports generated "v$release_version" core_report.txt]
-        file mkdir [file dirname $output]
-        set temporary [file join [file dirname $output] ".core-report-[pid]-[clock clicks].tmp"]
-        set fd [open $temporary {WRONLY CREAT EXCL}]
-        set failed [catch {
-            puts $fd "ResNet-20 core report"
-            puts $fd "Version: $release_version"
-            puts $fd "Implementation: $implementation | Vivado $vivado_version | $part | $clock_period ns"
-            puts $fd "Implementation source: $directory"
-            puts $fd "Simulation: $simulation | $simulator | $simulator_version"
-            puts $fd "Simulation source: $snr_dir"
-            foreach {title path} [list                 "Timing (post-route)" [file join $directory timing post_route.rpt]                 "Utilization (post-route)" [file join $directory utilization post_route.rpt]                 "SNR (dB)" [file join $snr_dir snr.txt]                 "Latency (cycles)" [file join $snr_dir latency.txt]] {
-                puts $fd "\n=== $title ==="
-                set input [open $path r]
-                set copy_failed [catch {fcopy $input $fd} copy_result copy_options]
-                close $input
-                if {$copy_failed} {return -options $copy_options $copy_result}
-            }
-        } result options]
-        set close_failed [catch {close $fd} close_result close_options]
-        if {!$failed && !$close_failed} {
-            set failed [catch {file rename -force $temporary $output} result options]
-        }
-        if {$failed || $close_failed} {file delete -force $temporary}
-        if {$failed} {return -options $options $result}
-        if {$close_failed} {return -options $close_options $close_result}
-        file mkdir [file dirname $version_report]
-        file copy -force $output $version_report
-        puts "Core report: $output"
-        puts "Version report: $version_report"
-        return $output
+        set header [list "Simulation: $simulation | $simulator | $simulator_version"             "Simulation source: $snr_dir"]
+        return [write_text_report snr_latency.txt $header [list             "SNR (dB)" [file join $snr_dir snr.txt]             "Latency (cycles)" [file join $snr_dir latency.txt]]]
     }
 
     proc compare {args} {

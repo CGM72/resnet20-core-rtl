@@ -4,14 +4,14 @@ Tcl 명령은 Vivado Tcl Console에서 실행합니다. 기본 테스트와 보�
 
 ## 소스 준비
 
-[GitHub Releases](https://github.com/CGM72/resnet20-core-rtl/releases/tag/v1.2.5)에서 `resnet20-core-rtl-v1.2.5.zip`을 받아 새 폴더에 풉니다.
+[GitHub Releases](https://github.com/CGM72/resnet20-core-rtl/releases/tag/v1.2.6)에서 `resnet20-core-rtl-v1.2.6.zip`을 받아 새 폴더에 풉니다.
 
 ## 실행기 불러오기
 
 Vivado에서 열려 있는 사용자 프로젝트를 저장하고 닫습니다. `C:/path/to`를 ZIP을 푼 위치로 바꿉니다. 다른 버전이라면 압축을 풀어 생성된 폴더 이름을 사용합니다.
 
 ```tcl
-source {C:/path/to/resnet20-core-rtl-v1.2.5/scripts/vivado.tcl}
+source {C:/path/to/resnet20-core-rtl-v1.2.6/scripts/vivado.tcl}
 ```
 
 Vivado를 다시 시작하거나 실행기 파일을 교체했으면 `source`를 다시 실행합니다.
@@ -55,36 +55,29 @@ add_wave -r /tb_core/dut/*
 python verification/core/golden_ref/check_snr.py
 ```
 
-## 보고서 한 번에 저장
+## 타이밍·Utilization 텍스트 저장
 
-1.2.5의 `scripts/vivado.tcl`을 불러온 뒤, 열린 프로젝트가 없는 Vivado Tcl Console에서 실행합니다. Python 3.10 이상이 필요합니다.
-타이밍·Utilization·SNR·latency를 함께 저장하려면 아래 명령부터 실행합니다.
+프로젝트를 닫은 상태에서 실행합니다.
 
 ```tcl
 fpga::report
 ```
 
-Python은 PATH, Windows `py` 실행기, 일반 설치 폴더 및 Python Install Manager 설치 폴더에서 자동으로 찾습니다.
-별도 경로를 지정해야 할 때는 아래 예시의 경로를 실제 Python 실행 파일로 바꿉니다. `{}`는 기본 클럭 주기를 사용한다는 뜻입니다.
+`fpga::analyze core`도 배치·배선 후 같은 `reports/core_report.txt`를 저장하므로 연달아 실행할 필요가 없습니다.
+`fpga::analyze core`는 분석 프로젝트를 열어 두며, `fpga::report`는 작업 후 자동으로 닫습니다.
+분석 클럭 제약을 지정하려면 `fpga::report 20.0`을 실행합니다. 이 흐름에는 Python이 필요 없습니다.
+
+## SNR·latency 별도 저장
+
+전체 모델 결과가 필요한 경우에 실행합니다. Python 3.10 이상이 필요합니다.
 
 ```tcl
-fpga::report {} {C:/path/to/python.exe}
+fpga::report_sim
 ```
 
-이미 `fpga::analyze core`를 실행했다면 분석 프로젝트가 열려 있습니다. 생성된 분석 프로젝트를 닫은 뒤 통합 보고서를 실행합니다.
-
-```tcl
-fpga::finish
-fpga::report
-```
-
-Vivado 프로그램은 계속 실행해 둡니다. `fpga::report`의 재사용 기록은 통합 보고서 실행에서 생성되므로, 별도로 실행한 `fpga::analyze core`의 배치·배선 결과는 첫 통합 보고서 실행에서 다시 측정할 수 있습니다.
-
-결과는 `reports/core_report.txt`에 저장됩니다. 저장소의 RTL·테스트 벡터·가중치·도구·분석 조건이 같으면 완료된 측정값을 재사용합니다.
-새 시뮬레이션이 필요한 경우 PATH의 Verilator와 C++20 빌드 도구를 사용할 수 있습니다. Verilator가 PATH에 없으면 XSim을 사용합니다.
-Verilator 빌드 환경이 없는 경우에는 `fpga::report {} {} xsim`으로 XSim을 지정합니다. 파형이 필요하면 `fpga::sim tb_core`를 실행합니다.
-배치·배선 목표 주기만 바꾸려면 예를 들어 `fpga::report 20.0`을 실행합니다.
-저장 파일과 latency 기준은 [분석 가이드](ANALYSIS.md#124-이상-통합-보고서)를 참고합니다.
+결과는 `reports/snr_latency.txt`에 저장됩니다. 같은 조건의 완료된 시뮬레이션은 재사용합니다.
+PATH에서 Verilator를 찾으면 사용하고, 없으면 XSim으로 실행합니다. Verilator 빌드 도구 없이 실행하려면 `fpga::report_sim {} xsim`으로 XSim을 지정합니다.
+Python을 직접 지정하려면 `fpga::report_sim {C:/path/to/python.exe}`를 실행합니다.
 
 ## 버전별 보고서 비교
 
@@ -98,11 +91,11 @@ fpga::compare
 별도 폴더에 풀어둔 버전은 각 보고서의 경로를 직접 넘겨도 됩니다.
 
 ```tcl
-fpga::compare {C:/projects/resnet20-core-rtl-v1.2.4/reports/core_report.txt} {C:/projects/resnet20-core-rtl-v1.2.5/reports/core_report.txt}
+fpga::compare {C:/projects/resnet20-core-rtl-v1.2.4/reports/core_report.txt} {C:/projects/resnet20-core-rtl-v1.2.6/reports/core_report.txt}
 ```
 
 1.2.1~1.2.3의 기존 자료는 `build/analysis/core/run_...` 폴더를 지정합니다. 측정 파일이 없는 항목은 `N/A`로 표시됩니다.
-비교 결과는 `reports/version_comparison.txt`에 저장됩니다.
+SNR·latency끼리 비교하려면 두 버전의 `reports/snr_latency.txt` 경로를 직접 넘깁니다. 비교 결과는 `reports/version_comparison.txt`에 저장됩니다.
 
 ## PNG 변환
 

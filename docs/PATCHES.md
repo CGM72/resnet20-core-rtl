@@ -4,6 +4,7 @@
 
 | 버전 | 변경 내역 | 배포 소스 |
 | --- | --- | --- |
+| 1.2.6 | 타이밍·Utilization 텍스트를 `fpga::report`와 `fpga::analyze core`에서 저장. 전체 모델 SNR·latency는 `fpga::report_sim`으로 분리 | [v1.2.6 릴리스](https://github.com/CGM72/resnet20-core-rtl/releases/tag/v1.2.6) · [ZIP](https://github.com/CGM72/resnet20-core-rtl/raw/refs/heads/main/downloads/resnet20-core-rtl-v1.2.6.zip) |
 | 1.2.5 | 생성된 텍스트를 버전별로 보존하고 `fpga::compare`로 타이밍·Utilization·SNR·latency 비교 | [v1.2.5 릴리스](https://github.com/CGM72/resnet20-core-rtl/releases/tag/v1.2.5) · [ZIP](https://github.com/CGM72/resnet20-core-rtl/raw/refs/heads/main/downloads/resnet20-core-rtl-v1.2.5.zip) |
 | 1.2.4 | `reports/core_report.txt` 통합 출력, 시뮬레이션·구현 결과 재사용, Verilator 실행 지원 | [v1.2.4 릴리스](https://github.com/CGM72/resnet20-core-rtl/releases/tag/v1.2.4) · [ZIP](https://github.com/CGM72/resnet20-core-rtl/raw/refs/heads/main/downloads/resnet20-core-rtl-v1.2.4.zip) |
 | 1.2.3 | `fpga::report`로 타이밍·Utilization·SNR·latency 보고서를 한 실행 폴더에 저장. 배포 ZIP에서 Windows Python Install Manager 자동 탐색 지원 | [v1.2.3 릴리스](https://github.com/CGM72/resnet20-core-rtl/releases/tag/v1.2.3) · [ZIP](https://github.com/CGM72/resnet20-core-rtl/raw/refs/heads/main/downloads/resnet20-core-rtl-v1.2.3.zip) |

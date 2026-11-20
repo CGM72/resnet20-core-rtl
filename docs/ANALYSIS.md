@@ -25,7 +25,13 @@ build/sim/tb_relu/
 Vivado 버전, FPGA part 또는 분석 클럭이 다르면 비교표 아래에 표시합니다. SNR과 latency는 같은 모델·입력·테스트벤치 스케줄의 결과끼리 비교합니다.
 원본 보고서 경로는 비교표에 기록됩니다.
 
-## 1.2.4 이상 통합 보고서
+## 1.2.6 보고서 분리
+
+`fpga::report`와 `fpga::analyze core`는 배치·배선 후 타이밍과 Utilization을 `reports/core_report.txt`에 저장합니다.
+`fpga::report_sim`은 전체 모델 시뮬레이션의 SNR과 latency를 `reports/snr_latency.txt`에 저장합니다.
+두 파일 모두 `reports/generated/v<버전>/`에도 저장됩니다. [실행 가이드](GUIDE.md)
+
+## 1.2.4~1.2.5 통합 보고서
 
 `reports/core_report.txt`에 배치·배선 후 Timing Summary와 Utilization, 레이어별·최종 로짓 SNR, 레이어별·전체 추론 latency를 함께 저장합니다.
 보고서 머리말에서 각 측정의 실행 경로, 재사용 여부, 시뮬레이터, Vivado 버전, FPGA part 및 분석 클럭 제약을 확인할 수 있습니다.

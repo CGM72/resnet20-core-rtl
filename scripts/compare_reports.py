@@ -43,17 +43,22 @@ def load(path):
         sections = re.split(r"^=== (.*?) ===\s*\n", read_report(path), flags=re.M)
         metadata = sections[0]
         content = dict(zip(sections[1::2], sections[2::2], strict=True))
-        timing = content["Timing (post-route)"]
-        util = content["Utilization (post-route)"]
-        snr = content["SNR (dB)"]
-        latency = content["Latency (cycles)"]
+        timing = content.get("Timing (post-route)", "")
+        util = content.get("Utilization (post-route)", "")
+        snr = content.get("SNR (dB)", "")
+        latency = content.get("Latency (cycles)", "")
+        if not ((timing and util) or (snr and latency)):
+            raise ReportError("No complete implementation or simulation report sections")
         tag = re.search(r"^Version: (.+)$", metadata, re.M)
         version = tag[1].strip() if tag else labeled_version(path)
         implementation = re.search(r"^Implementation: [^|]+\| (.+)$", metadata, re.M)
-        condition = implementation[1].strip() if implementation else "unknown"
+        simulation = re.search(r"^Simulation: [^|]+\| (.+)$", metadata, re.M)
+        condition = implementation[1].strip() if implementation else None
+        if simulation and not implementation:
+            condition = f"Simulation | {simulation[1].strip()}"
 
-    timing_values = parse_timing(timing)
-    resources = parse_utilization(util)
+    timing_values = parse_timing(timing) if timing else {}
+    resources = parse_utilization(util) if util else {}
     logits = re.search(r"^logits\s+\d+\s+samples\s+([+-]?(?:\d+(?:\.\d+)?|inf))\s+dB\s*$", snr, re.M)
     inference = re.search(r"^inference\s+(\d+)\s+(\d+)\s+(\d+)\s*$", latency, re.M)
     if (snr and not logits) or (latency and not inference):
@@ -61,7 +66,7 @@ def load(path):
     if inference and int(inference[2]) - int(inference[1]) != int(inference[3]):
         raise ReportError("Inconsistent full-inference latency")
     timing_fields = tuple(timing_values.get(key) for key in ("wns_ns", "tns_ns", "whs_ns", "ths_ns"))
-    used = tuple(resources[key]["used"] for key in ("LUT", "FF", "BRAM", "DSP"))
+    used = tuple(resources.get(key, {}).get("used") for key in ("LUT", "FF", "BRAM", "DSP"))
     return (version, *timing_fields, *used, logits[1] if logits else None,
             inference[3] if inference else None), condition, path
 
@@ -94,7 +99,7 @@ def main():
     lines.extend(" | ".join(f"{value:{width}}" for value, width in zip(row, widths, strict=True))
                  for row in rows[1:])
     lines.append("")
-    if len({condition for _, condition, _ in entries}) > 1:
+    if len({condition for _, condition, _ in entries if condition and not condition.startswith("Simulation |")}) > 1:
         lines.append("Implementation conditions differ. Review the Vivado version, FPGA and period below.")
     lines.append("Compare SNR and latency using the same model, input and testbench schedule.")
     lines.extend(f"v{values[0]} | {condition} | {path.resolve()}" for values, condition, path in entries)

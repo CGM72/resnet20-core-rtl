@@ -3,6 +3,8 @@ source [file normalize [file join [file dirname [info script]] .. .. scripts viv
 set original_root $fpga::root
 set project "";set actions {};set loaded_design {};set properties {};set route_fails 0;set constraint_texts {};set exec_count 0
 proc argument {args key} {set i [lsearch -exact $args $key];if {$i<0} {error "Missing $key"};return [lindex $args [expr {$i+1}]]}
+set report_version "report-test-[clock clicks]"
+proc version {args} {return $::report_version}
 proc get_projects {args} {
  if {$::project eq ""} {return {}}
  return [list $::project]
@@ -94,9 +96,7 @@ fpga::finish
 if {$project ne ""} {error "Finish did not close generated synthesis project"}
 puts "PASS full-model static directory fixture, synth, and safe finish"
 reset_mock
-set report_version "report-test-[clock clicks]"
 set report_keys {}
-proc version {args} {return $::report_version}
 rename exec workflow_stub_exec
 proc exec {args} {
  if {[file tail [lindex $args 2]] eq "report_tools.py"} {
@@ -124,33 +124,33 @@ fpga::analyze core
 fpga::finish
 if {"close_sim" in $actions} {error "Closing an analysis project must not close a simulation"}
 reset_mock
-set report_path [fpga::report 20.0 $report_python xsim]
+set report_path [fpga::report 20.0]
 if {$report_path ne [file join $fpga::root reports core_report.txt]} {error "Wrong text report destination"}
 set fd [open $report_path r];set report_text [read $fd];close $fd
-foreach section {{Timing (post-route)} {Utilization (post-route)} {SNR (dB)} {Latency (cycles)}} {
- if {[string first $section $report_text] < 0} {error "Missing combined report section $section"}
+foreach section {{Timing (post-route)} {Utilization (post-route)}} {
+ if {[string first $section $report_text] < 0} {error "Missing implementation report section $section"}
 }
-if {[lsearch -exact $actions close_sim] >= [lsearch -exact $actions synth] ||
-    ![string match {* -period 20.0 *} [lindex $constraint_texts end]]} {
- error "Report must close simulation before analysis and forward the requested period"
+if {"simulate" in $actions || $exec_count || $project ne "" || [string match {*SNR (dB)*} $report_text]} {
+ error "Implementation report must skip simulation, Python and SNR"
 }
-if {"log_wave" in $actions || "add_wave" in $actions} {error "Combined report must skip waveform recording"}
+if {![string match {* -period 20.0 *} [lindex $constraint_texts end]]} {error "Report did not forward period"}
 reset_mock
-set project user_project
-fpga::report 20 $report_python xsim
-if {"simulate" in $actions || "synth" in $actions || $project ne "user_project"} {error "Cache hit altered the open project or repeated a measurement"}
+set sim_report [fpga::report_sim $report_python xsim]
+set fd [open $sim_report r];set sim_text [read $fd];close $fd
+foreach section {{SNR (dB)} {Latency (cycles)}} {
+ if {[string first $section $sim_text] < 0} {error "Missing simulation report section $section"}
+}
+if {"simulate" ni $actions || "synth" in $actions || "log_wave" in $actions || "add_wave" in $actions} {
+ error "Simulation report must run without implementation or waveforms"
+}
 reset_mock
-fpga::report 25.0 $report_python xsim
-if {"simulate" in $actions || "synth" ni $actions} {error "Period change should only rerun Vivado analysis"}
-reset_mock
-append report_version "-updated"
-fpga::report 25.0 $report_python xsim
-if {"simulate" ni $actions || "synth" ni $actions} {error "Tool version change should remeasure both results"}
+fpga::report_sim $report_python xsim
+if {"simulate" in $actions || "synth" in $actions} {error "Simulation cache hit repeated a measurement"}
 rename exec {}
 rename workflow_stub_exec exec
 if {$empty_project_queries} {error "current_project queried with no projects open"}
 puts "PASS analyze -> finish -> report without querying an empty current project"
-puts "PASS combined core report export and cache reuse"
+puts "PASS separate implementation and simulation reports with simulation cache reuse"
 # Custom source/config reuse remains supported.
 if {[llength $argv]} {
  set fpga::root [file normalize [lindex $argv 0]]
