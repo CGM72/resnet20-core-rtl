@@ -158,7 +158,9 @@ namespace eval fpga {
             foreach stale {scoreboard_results.txt results.json latency.txt logits_actual.hex} {
                 file delete -force [file join $snr_dir $stale]
             }
-            file delete -force {*}[glob -nocomplain -directory $snr_dir layer_*_actual.hex]
+            foreach stale [glob -nocomplain -directory $snr_dir layer_*_actual.hex] {
+                file delete -force $stale
+            }
             append options " -testplusarg \"snr_dir=$snr_dir\""
         }
         puts "Design top=[dict get $cfg top]; TB=$tb"
@@ -310,6 +312,14 @@ namespace eval fpga {
         return $directory
     }
 
+    proc measure_and_finish {command args} {
+        set failed [catch {$command {*}$args} result options]
+        set close_failed [catch {finish} close_result close_options]
+        if {$failed} {return -options $options $result}
+        if {$close_failed} {return -options $close_options $close_result}
+        return $result
+    }
+
     proc report {{clock_period ""} {python_exe ""} {simulator auto}} {
         variable root
         set cfg [config core]
@@ -382,11 +392,7 @@ namespace eval fpga {
                 exec {*}$python -E $helper simulate --verilator $verilator --run $snr_dir                     --vectors $vectors --weights $weights {*}$args -- {*}$rtl {*}[manifest tb_core]
             } else {
                 set snr_dir [file join $run snr]
-                try {
-                    sim tb_core "" core 0 $run
-                } finally {
-                    finish
-                }
+                measure_and_finish sim tb_core "" core 0 $run
             }
             set snr [exec {*}$python -E [file join $golden check_snr.py]                 --run $snr_dir --vectors $vectors --weights $weights]
             if {![file isfile [file join $snr_dir latency.txt]]} {error "Missing simulation latency report: $snr_dir"}
@@ -402,11 +408,7 @@ namespace eval fpga {
         if {$directory eq ""} {
             set implementation measured
             puts "Running core synthesis, placement and routing"
-            try {
-                set directory [analyze core $clock_period]
-            } finally {
-                finish
-            }
+            set directory [measure_and_finish analyze core $clock_period]
             set fd [open $timing_pointer w]
             puts $fd $directory
             close $fd
@@ -414,8 +416,9 @@ namespace eval fpga {
 
         set output [file join $root reports core_report.txt]
         file mkdir [file dirname $output]
-        set fd [file tempfile temporary [file join [file dirname $output] .core-report-XXXXXX]]
-        try {
+        set temporary [file join [file dirname $output] ".core-report-[pid]-[clock clicks].tmp"]
+        set fd [open $temporary {WRONLY CREAT EXCL}]
+        set failed [catch {
             puts $fd "ResNet-20 core report"
             puts $fd "Implementation: $implementation | Vivado $vivado_version | $part | $clock_period ns"
             puts $fd "Implementation source: $directory"
@@ -424,15 +427,18 @@ namespace eval fpga {
             foreach {title path} [list                 "Timing (post-route)" [file join $directory timing post_route.rpt]                 "Utilization (post-route)" [file join $directory utilization post_route.rpt]                 "SNR (dB)" [file join $snr_dir snr.txt]                 "Latency (cycles)" [file join $snr_dir latency.txt]] {
                 puts $fd "\n=== $title ==="
                 set input [open $path r]
-                try {fcopy $input $fd} finally {close $input}
+                set copy_failed [catch {fcopy $input $fd} copy_result copy_options]
+                close $input
+                if {$copy_failed} {return -options $copy_options $copy_result}
             }
-            close $fd
-            set fd ""
-            file rename -force $temporary $output
-        } finally {
-            if {$fd ne ""} {close $fd}
-            file delete -force $temporary
+        } result options]
+        set close_failed [catch {close $fd} close_result close_options]
+        if {!$failed && !$close_failed} {
+            set failed [catch {file rename -force $temporary $output} result options]
         }
+        if {$failed || $close_failed} {file delete -force $temporary}
+        if {$failed} {return -options $options $result}
+        if {$close_failed} {return -options $close_options $close_result}
         puts "Core report: $output"
         return $output
     }

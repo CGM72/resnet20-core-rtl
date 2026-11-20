@@ -95,12 +95,17 @@ if {$project ne ""} {error "Finish did not close generated synthesis project"}
 puts "PASS full-model static directory fixture, synth, and safe finish"
 reset_mock
 set report_version "report-test-[clock clicks]"
+set report_keys {}
 proc version {args} {return $::report_version}
 rename exec workflow_stub_exec
 proc exec {args} {
  if {[file tail [lindex $args 2]] eq "report_tools.py"} {
   if {[lindex $args 3] ne "key"} {error "Expected to fingerprint report inputs"}
-  return [format %x [zlib crc32 [lrange $args 4 end]]]
+  set inputs [lrange $args 4 end]
+  if {![dict exists $::report_keys $inputs]} {
+   dict set ::report_keys $inputs [dict size $::report_keys]
+  }
+  return "$::report_version-[dict get $::report_keys $inputs]"
  }
  if {[file tail [lindex $args 2]] ne "check_snr.py"} {return [workflow_stub_exec {*}$args]}
  if {[lindex $args 0] ne $::report_python || [lindex $args 1] ne "-E" || [lsearch -exact $::actions run] < 0} {
