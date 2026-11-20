@@ -131,13 +131,13 @@ namespace eval fpga {
         return $sources
     }
 
-    proc sim {testbench {python_exe ""} {target ""} {record_waves 1}} {
+    proc sim {testbench {python_exe ""} {target ""} {record_waves 1} {directory ""}} {
         variable root
         require_closed
         set cfg [config $target]
         set tb [file rootname [file tail $testbench]]
         set tb_sources [manifest $tb]
-        set directory [file join $root build sim $tb]
+        if {$directory eq ""} {set directory [file join $root build sim $tb]}
         set tb_dir [file join $root tb $tb]
         file mkdir $directory
         if {$python_exe eq ""} {set python_exe [dict get $cfg python]}
@@ -298,27 +298,143 @@ namespace eval fpga {
         return $directory
     }
 
-    proc report {{clock_period ""} {python_exe ""}} {
-        variable root
-        require_closed
-        set python [python_command $python_exe]
-        set snr_dir [file join $root build sim tb_core snr]
-        puts "Running full-model simulation without waveform recording"
-        sim tb_core "" core 0
-        set snr [exec {*}$python -E [file join $root verification core golden_ref check_snr.py] --run $snr_dir]
-        set latency [file join $snr_dir latency.txt]
-        if {![file isfile $latency]} {error "Missing simulation latency report: $latency"}
-        finish
-
-        puts "Running core synthesis, placement and routing"
-        set directory [analyze core $clock_period]
-        file copy $latency [file join $directory latency.txt]
-        file copy [file join $snr_dir results.json] [file join $directory snr.json]
-        set fd [open [file join $directory snr.txt] w]
-        puts $fd $snr
+    # Cache entries point at completed runs. Missing outputs cause a fresh measurement.
+    proc cached_report_run {pointer outputs} {
+        if {![file isfile $pointer]} {return ""}
+        set fd [open $pointer r]
+        set directory [string trim [read $fd]]
         close $fd
-        puts "Timing, utilization, SNR and latency reports: $directory"
+        foreach name $outputs {
+            if {![file isfile [file join $directory $name]]} {return ""}
+        }
         return $directory
+    }
+
+    proc report {{clock_period ""} {python_exe ""} {simulator auto}} {
+        variable root
+        set cfg [config core]
+        if {$clock_period eq ""} {set clock_period [dict get $cfg period_ns]}
+        set clock_period [expr {double([period $clock_period])}]
+        set python [python_command $python_exe]
+        set helper [file join $root scripts report_tools.py]
+        set cache [file join $root build report_cache]
+        file mkdir $cache
+
+        set verilator [lindex [auto_execok verilator] 0]
+        if {$simulator eq "auto"} {
+            set simulator [expr {$verilator eq "" ? "xsim" : "verilator"}]
+        }
+        set vivado_version [version -short]
+        switch -- $simulator {
+            xsim {set simulator_version $vivado_version}
+            verilator {
+                if {$verilator eq ""} {error "Verilator is not on PATH. Use fpga::report {} {} xsim."}
+                set simulator_version [exec $verilator --version]
+            }
+            default {error "Simulator must be auto, xsim or verilator"}
+        }
+
+        set rtl [dict get $cfg rtl_files]
+        set includes [dict get $cfg include_dirs]
+        set defines [dict get $cfg defines]
+        set part [dict get $cfg part]
+        set launcher [file join $root scripts vivado.tcl]
+        set common_inputs [concat $rtl $includes]
+        foreach source $rtl {
+            foreach ext {vh svh} {
+                lappend common_inputs {*}[glob -nocomplain -directory [file dirname $source] *.$ext]
+            }
+        }
+        set common_inputs [lsort -unique $common_inputs]
+
+        set tb_dir [file join $root tb tb_core]
+        set tb_includes [concat $includes [list $tb_dir [file join $tb_dir include]]]
+        set tb_common [file join $root tb common]
+        if {[file isdirectory $tb_common]} {lappend tb_includes $tb_common}
+        set vectors [absolute [dict get $cfg fixtures tb_core files vectors_dir]]
+        set weights [absolute [dict get $cfg fixtures tb_core files weight_path]]
+        set golden [file join $root verification core golden_ref]
+        set oracle [file join $root verification resnet20]
+        set sim_inputs [concat $common_inputs $tb_includes [manifest tb_core]             [list $tb_dir $vectors $weights $launcher $helper                 [file join $oracle float_reference.py] [file join $oracle resnet20.c]]             [glob -nocomplain -directory $golden *.py]]
+        set sim_key [exec {*}$python -E $helper key             --value=[list $simulator $simulator_version $part $rtl $includes $defines $vectors $weights]             -- {*}$sim_inputs]
+        set sim_pointer [file join $cache "sim-$sim_key.txt"]
+        set snr_dir [cached_report_run $sim_pointer {snr.txt latency.txt results.json scoreboard_results.txt}]
+        set xdc [dict get $cfg xdc_files]
+        set timing_key [exec {*}$python -E $helper key             --value=[list $vivado_version $part [dict get $cfg top] [dict get $cfg clock_port]                 $clock_period $rtl $includes $defines $xdc]             -- $launcher {*}$common_inputs {*}$xdc]
+        set timing_pointer [file join $cache "timing-$timing_key.txt"]
+        set directory [cached_report_run $timing_pointer {timing/post_route.rpt utilization/post_route.rpt}]
+        if {$directory eq "" || ($simulator eq "xsim" && $snr_dir eq "")} {
+            require_closed
+        }
+
+        set simulation reused
+        if {$snr_dir eq ""} {
+            set simulation measured
+            set run [file join $cache "sim-[pid]-[clock clicks]"]
+            puts "Running full-model simulation using $simulator"
+            if {$simulator eq "verilator"} {
+                set snr_dir $run
+                set args {}
+                foreach path $tb_includes {
+                    lappend args --include=$path
+                }
+                foreach define $defines {lappend args --define=$define}
+                exec {*}$python -E $helper simulate --verilator $verilator --run $snr_dir                     --vectors $vectors --weights $weights {*}$args -- {*}$rtl {*}[manifest tb_core]
+            } else {
+                set snr_dir [file join $run snr]
+                try {
+                    sim tb_core "" core 0 $run
+                } finally {
+                    finish
+                }
+            }
+            set snr [exec {*}$python -E [file join $golden check_snr.py]                 --run $snr_dir --vectors $vectors --weights $weights]
+            if {![file isfile [file join $snr_dir latency.txt]]} {error "Missing simulation latency report: $snr_dir"}
+            set fd [open [file join $snr_dir snr.txt] w]
+            puts $fd $snr
+            close $fd
+            set fd [open $sim_pointer w]
+            puts $fd $snr_dir
+            close $fd
+        }
+
+        set implementation reused
+        if {$directory eq ""} {
+            set implementation measured
+            puts "Running core synthesis, placement and routing"
+            try {
+                set directory [analyze core $clock_period]
+            } finally {
+                finish
+            }
+            set fd [open $timing_pointer w]
+            puts $fd $directory
+            close $fd
+        }
+
+        set output [file join $root reports core_report.txt]
+        file mkdir [file dirname $output]
+        set fd [file tempfile temporary [file join [file dirname $output] .core-report-XXXXXX]]
+        try {
+            puts $fd "ResNet-20 core report"
+            puts $fd "Implementation: $implementation | Vivado $vivado_version | $part | $clock_period ns"
+            puts $fd "Implementation source: $directory"
+            puts $fd "Simulation: $simulation | $simulator | $simulator_version"
+            puts $fd "Simulation source: $snr_dir"
+            foreach {title path} [list                 "Timing (post-route)" [file join $directory timing post_route.rpt]                 "Utilization (post-route)" [file join $directory utilization post_route.rpt]                 "SNR (dB)" [file join $snr_dir snr.txt]                 "Latency (cycles)" [file join $snr_dir latency.txt]] {
+                puts $fd "\n=== $title ==="
+                set input [open $path r]
+                try {fcopy $input $fd} finally {close $input}
+            }
+            close $fd
+            set fd ""
+            file rename -force $temporary $output
+        } finally {
+            if {$fd ne ""} {close $fd}
+            file delete -force $temporary
+        }
+        puts "Core report: $output"
+        return $output
     }
 
     # Optional PNG conversion, separate from native Vivado measurement.

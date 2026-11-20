@@ -4,6 +4,7 @@
 build/
 dist/
 out/
+/reports/core_report.txt
 
 # ==============================
 # Vivado

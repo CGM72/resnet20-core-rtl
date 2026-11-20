@@ -83,33 +83,52 @@ fpga::finish
 if {$project ne ""} {error "Finish did not close generated synthesis project"}
 puts "PASS full-model static directory fixture, synth, and safe finish"
 reset_mock
-set report_sim [file join $fpga::root build sim tb_core snr]
+set report_version "report-test-[clock clicks]"
+proc version {args} {return $::report_version}
 rename exec workflow_stub_exec
 proc exec {args} {
+ if {[file tail [lindex $args 2]] eq "report_tools.py"} {
+  if {[lindex $args 3] ne "key"} {error "Expected to fingerprint report inputs"}
+  return [format %x [zlib crc32 [lrange $args 4 end]]]
+ }
  if {[file tail [lindex $args 2]] ne "check_snr.py"} {return [workflow_stub_exec {*}$args]}
- if {[lindex $args 0] ne $::report_python || [lindex $args 1] ne "-E" || [argument $args --run] ne $::report_sim || [lsearch -exact $::actions run] < 0} {
+ if {[lindex $args 0] ne $::report_python || [lindex $args 1] ne "-E" || [lsearch -exact $::actions run] < 0} {
   error "SNR checker called before simulation or with wrong output directory"
  }
- foreach name {latency.txt results.json} {
-  set fd [open [file join $::report_sim $name] w]
+ set run [argument $args --run]
+ foreach name {latency.txt results.json scoreboard_results.txt} {
+  set fd [open [file join $run $name] w]
   puts $fd "STUB $name"
   close $fd
  }
  return {STUB SNR}
 }
 set report_python {C:/Python Install/python.exe}
-set report_dir [fpga::report 20.0 $report_python]
-foreach path {timing/post_route.rpt utilization/post_route.rpt snr.txt snr.json latency.txt} {
- if {![file isfile [file join $report_dir $path]]} {error "Missing combined report $path"}
+set report_path [fpga::report 20.0 $report_python xsim]
+if {$report_path ne [file join $fpga::root reports core_report.txt]} {error "Wrong text report destination"}
+set fd [open $report_path r];set report_text [read $fd];close $fd
+foreach section {{Timing (post-route)} {Utilization (post-route)} {SNR (dB)} {Latency (cycles)}} {
+ if {[string first $section $report_text] < 0} {error "Missing combined report section $section"}
 }
 if {[lsearch -exact $actions close_sim] >= [lsearch -exact $actions synth] ||
     ![string match {* -period 20.0 *} [lindex $constraint_texts end]]} {
  error "Report must close simulation before analysis and forward the requested period"
 }
+if {"log_wave" in $actions || "add_wave" in $actions} {error "Combined report must skip waveform recording"}
+reset_mock
+set project user_project
+fpga::report 20 $report_python xsim
+if {"simulate" in $actions || "synth" in $actions || $project ne "user_project"} {error "Cache hit altered the open project or repeated a measurement"}
+reset_mock
+fpga::report 25.0 $report_python xsim
+if {"simulate" in $actions || "synth" ni $actions} {error "Period change should only rerun Vivado analysis"}
+reset_mock
+append report_version "-updated"
+fpga::report 25.0 $report_python xsim
+if {"simulate" ni $actions || "synth" ni $actions} {error "Tool version change should remeasure both results"}
 rename exec {}
 rename workflow_stub_exec exec
-if {"log_wave" in $actions || "add_wave" in $actions} {error "Combined report must skip waveform recording"}
-puts "PASS combined core reports"
+puts "PASS combined core report export and cache reuse"
 # Custom source/config reuse remains supported.
 if {[llength $argv]} {
  set fpga::root [file normalize [lindex $argv 0]]

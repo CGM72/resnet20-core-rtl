@@ -4,6 +4,7 @@
 
 | 버전 | 변경 내역 | 배포 소스 |
 | --- | --- | --- |
+| 1.2.4 | `reports/core_report.txt` 통합 출력, 시뮬레이션·구현 결과 재사용, Verilator 실행 지원 | [v1.2.4 릴리스](https://github.com/CGM72/resnet20-core-rtl/releases/tag/v1.2.4) · [ZIP](https://github.com/CGM72/resnet20-core-rtl/raw/refs/heads/main/downloads/resnet20-core-rtl-v1.2.4.zip) |
 | 1.2.3 | `fpga::report`로 타이밍·Utilization·SNR·latency 보고서를 한 실행 폴더에 저장. 배포 ZIP에서 Windows Python Install Manager 자동 탐색 지원 | [v1.2.3 릴리스](https://github.com/CGM72/resnet20-core-rtl/releases/tag/v1.2.3) · [ZIP](https://github.com/CGM72/resnet20-core-rtl/raw/refs/heads/main/downloads/resnet20-core-rtl-v1.2.3.zip) |
 | 1.2.2 | 합성곱 탭 처리와 skip 정렬을 `rtl/compute/conv.v`로 분리 | [v1.2.2 릴리스](https://github.com/CGM72/resnet20-core-rtl/releases/tag/v1.2.2) · [ZIP](https://github.com/CGM72/resnet20-core-rtl/raw/refs/heads/main/downloads/resnet20-core-rtl-v1.2.2.zip) |
 | 1.2.1 | 전체 모델의 레이어별 RTL 출력 덤프와 Python SNR 추출 추가. 최종 로짓 50 dB 검증 유지. 문서를 다섯 가지 가이드로 개편 | [v1.2.1 릴리스](https://github.com/CGM72/resnet20-core-rtl/releases/tag/v1.2.1) · [ZIP](https://github.com/CGM72/resnet20-core-rtl/raw/refs/heads/main/downloads/resnet20-core-rtl-v1.2.1.zip) |

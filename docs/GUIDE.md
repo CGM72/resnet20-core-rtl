@@ -4,14 +4,14 @@ Tcl 명령은 Vivado Tcl Console에서 실행합니다. 기본 테스트와 보�
 
 ## 소스 준비
 
-[GitHub Releases](https://github.com/CGM72/resnet20-core-rtl/releases/tag/v1.2.3)에서 `resnet20-core-rtl-v1.2.3.zip`을 받아 새 폴더에 풉니다.
+[GitHub Releases](https://github.com/CGM72/resnet20-core-rtl/releases/tag/v1.2.4)에서 `resnet20-core-rtl-v1.2.4.zip`을 받아 새 폴더에 풉니다.
 
 ## 실행기 불러오기
 
 Vivado에서 열려 있는 사용자 프로젝트를 저장하고 닫습니다. `C:/path/to`를 ZIP을 푼 위치로 바꿉니다. 다른 버전이라면 압축을 풀어 생성된 폴더 이름을 사용합니다.
 
 ```tcl
-source {C:/path/to/resnet20-core-rtl-v1.2.3/scripts/vivado.tcl}
+source {C:/path/to/resnet20-core-rtl-v1.2.4/scripts/vivado.tcl}
 ```
 
 Vivado를 다시 시작하거나 실행기 파일을 교체했으면 `source`를 다시 실행합니다.
@@ -70,9 +70,11 @@ Python은 PATH, Windows `py` 실행기, 일반 설치 폴더 및 Python Install 
 fpga::report {} {C:/path/to/python.exe}
 ```
 
-이 명령은 파형 기록 없이 전체 모델 시뮬레이션을 수행한 뒤 core를 합성·배치·배선합니다. 출력 경로는 콘솔에 표시됩니다. 파형이 필요하면 `fpga::sim tb_core`를 실행합니다.
+결과는 `reports/core_report.txt`에 저장됩니다. 저장소의 RTL·테스트 벡터·가중치·도구·분석 조건이 같으면 완료된 측정값을 재사용합니다.
+새 시뮬레이션이 필요한 경우 PATH의 Verilator와 C++20 빌드 도구를 사용할 수 있습니다. Verilator가 PATH에 없으면 XSim을 사용합니다.
+Verilator 빌드 환경이 없는 경우에는 `fpga::report {} {} xsim`으로 XSim을 지정합니다. 파형이 필요하면 `fpga::sim tb_core`를 실행합니다.
 배치·배선 목표 주기만 바꾸려면 예를 들어 `fpga::report 20.0`을 실행합니다.
-저장 파일과 latency 기준은 [분석 가이드](ANALYSIS.md#123-통합-보고서)를 참고합니다.
+저장 파일과 latency 기준은 [분석 가이드](ANALYSIS.md#124-통합-보고서)를 참고합니다.
 
 ## PNG 변환
 
