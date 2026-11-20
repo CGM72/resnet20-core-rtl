@@ -1,10 +1,10 @@
 # 버전별 패치 내역
 
-버전별 ZIP의 최상위 폴더는 `resnet20-core-rtl/`입니다. 아래 태그는 각 버전의 배포 당시 소스를 가리킵니다. 적용된 문서 개편은 유지보수 브랜치와 ZIP에서 확인할 수 있습니다.
+배포 ZIP의 파일명과 압축 해제 후 최상위 폴더에 버전이 표시됩니다. 예를 들어 `resnet20-core-rtl-v1.2.2.zip`을 풀면 `resnet20-core-rtl-v1.2.2/`가 생성됩니다. 아래 태그는 각 버전의 배포 당시 소스를 가리킵니다. 적용된 문서 개편은 유지보수 브랜치와 ZIP에서 확인할 수 있습니다.
 
 | 버전 | 변경 내역 | 배포 소스 |
 | --- | --- | --- |
-| 1.2.2 | 합성곱 탭 처리와 skip 정렬을 `rtl/compute/conv.v`로 분리 | [main](https://github.com/CGM72/resnet20-core-rtl/tree/main) · [ZIP](https://github.com/CGM72/resnet20-core-rtl/raw/refs/heads/main/downloads/resnet20-core-rtl-v1.2.2.zip) |
+| 1.2.2 | 합성곱 탭 처리와 skip 정렬을 `rtl/compute/conv.v`로 분리 | [v1.2.2](https://github.com/CGM72/resnet20-core-rtl/tree/v1.2.2) · [ZIP](https://github.com/CGM72/resnet20-core-rtl/raw/refs/heads/main/downloads/resnet20-core-rtl-v1.2.2.zip) |
 | 1.2.1 | 전체 모델의 레이어별 RTL 출력 덤프와 Python SNR 추출 추가. 최종 로짓 50 dB 검증 유지. 문서를 다섯 가지 가이드로 개편 | [배포 커밋](https://github.com/CGM72/resnet20-core-rtl/tree/7286fe3115014e6139d166cadbc6cb26c35af6fe) · [ZIP](https://github.com/CGM72/resnet20-core-rtl/raw/refs/heads/main/downloads/resnet20-core-rtl-v1.2.1.zip) |
 | 1.1.1 | 1.1.0 RTL의 가독성 개선과 SoC 문서 보강. 기본 core 논리 동등성 확인 | [v1.1.1](https://github.com/CGM72/resnet20-core-rtl/tree/v1.1.1) · [release/1.1.1](https://github.com/CGM72/resnet20-core-rtl/tree/release/1.1.1) · [ZIP](https://github.com/CGM72/resnet20-core-rtl/raw/refs/heads/main/downloads/resnet20-core-rtl-v1.1.1.zip) |
 | 1.1.0 | MAC 5단계, GAP 4단계 shift 평균, 4-entry skip FIFO 적용. 기본 GAP 크기는 2의 거듭제곱 | [v1.1.0](https://github.com/CGM72/resnet20-core-rtl/tree/v1.1.0) · [release/1.1.0](https://github.com/CGM72/resnet20-core-rtl/tree/release/1.1.0) · [ZIP](https://github.com/CGM72/resnet20-core-rtl/raw/refs/heads/main/downloads/resnet20-core-rtl-v1.1.0.zip) |
