@@ -12,8 +12,8 @@ proc auto_execok {name} {
 }
 proc exec {args} {
     set index [lsearch -exact $args -c]
-    if {$index < 0} {error "Only a version probe was expected"}
-    set prefix [lrange $args 0 [expr {$index-1}]]
+    if {$index < 1 || [lindex $args [expr {$index-1}]] ne "-E"} {error "Expected an environment-independent version probe"}
+    set prefix [lrange $args 0 [expr {$index-2}]]
     lappend ::seen $prefix
     switch -- $::mode {
         python3 - alias {

@@ -22,7 +22,7 @@ rename exec workflow_real_exec
 proc exec {args} {
  incr ::exec_count
  if {[lsearch -exact $args -c]>=0} {return FPGA_PYTHON_OK}
- if {![file isfile [lindex $args 1]]} {error "Missing Python helper"}
+ if {[lindex $args 1] ne "-E" || ![file isfile [lindex $args 2]]} {error "Missing Python helper"}
  set ::last_python $args
  return {Image helper stub}
 }
@@ -86,8 +86,8 @@ reset_mock
 set report_sim [file join $fpga::root build sim tb_core snr]
 rename exec workflow_stub_exec
 proc exec {args} {
- if {[file tail [lindex $args 1]] ne "check_snr.py"} {return [workflow_stub_exec {*}$args]}
- if {[lindex $args 0] ne $::report_python || [argument $args --run] ne $::report_sim || [lsearch -exact $::actions run] < 0} {
+ if {[file tail [lindex $args 2]] ne "check_snr.py"} {return [workflow_stub_exec {*}$args]}
+ if {[lindex $args 0] ne $::report_python || [lindex $args 1] ne "-E" || [argument $args --run] ne $::report_sim || [lsearch -exact $::actions run] < 0} {
   error "SNR checker called before simulation or with wrong output directory"
  }
  foreach name {latency.txt results.json} {

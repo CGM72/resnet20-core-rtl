@@ -79,7 +79,7 @@ fpga::report {} {C:/path/to/python.exe}
 분석을 완료한 모듈의 보고서를 PNG로 변환할 때 Python 3.10 이상과 Pillow를 사용합니다.
 
 ```tcl
-exec {*}[fpga::python_command] -m pip install Pillow
+exec {*}[fpga::python_command] -E -m pip install Pillow
 fpga::images relu
 ```
 

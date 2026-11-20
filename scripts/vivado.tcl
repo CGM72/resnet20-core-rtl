@@ -65,13 +65,14 @@ namespace eval fpga {
             if {[catch {llength $requested}]} {error "Invalid Python command/path: $requested"}
             set candidates [list $requested]
         }
-        set probe {import sys; sys.exit(1) if sys.version_info < (3, 10) else print("FPGA_PYTHON_OK")}
+        # Vivado may export PYTHONHOME/PYTHONPATH for its bundled interpreter.
+        set probe {import argparse, sys; sys.exit(1) if sys.version_info < (3, 10) else print("FPGA_PYTHON_OK")}
         foreach command $candidates {
             set executable [lindex $command 0]
             set resolved [auto_execok $executable]
             set resolved_path [string map {\\ /} [lindex $resolved 0]]
             if {[string match -nocase */Microsoft/WindowsApps/python*.exe $resolved_path]} {continue}
-            if {![catch {exec {*}$command -c $probe 2>@1} output] &&
+            if {![catch {exec {*}$command -E -c $probe 2>@1} output] &&
                 [lsearch -exact [split [string trim $output] "\n"] FPGA_PYTHON_OK] >= 0} {
                 puts "Python: $command"
                 return $command
@@ -303,7 +304,7 @@ namespace eval fpga {
         set snr_dir [file join $root build sim tb_core snr]
         puts "Running full-model simulation without waveform recording"
         sim tb_core "" core 0
-        set snr [exec {*}$python [file join $root verification core golden_ref check_snr.py] --run $snr_dir]
+        set snr [exec {*}$python -E [file join $root verification core golden_ref check_snr.py] --run $snr_dir]
         set latency [file join $snr_dir latency.txt]
         if {![file isfile $latency]} {error "Missing simulation latency report: $latency"}
         finish
@@ -336,12 +337,12 @@ namespace eval fpga {
         if {$python_exe eq ""} {set python_exe [dict get $cfg python]}
         set command [python_command $python_exe]
         set exporter [file join $root scripts export_analysis.py]
-        puts [exec {*}$command $exporter check --period [dict get $snapshot period_ns]]
-        puts [exec {*}$command $exporter init --results $directory --period [dict get $snapshot period_ns] \
+        puts [exec {*}$command -E $exporter check --period [dict get $snapshot period_ns]]
+        puts [exec {*}$command -E $exporter init --results $directory --period [dict get $snapshot period_ns] \
             --top [dict get $snapshot top] --part [dict get $snapshot part] \
             --clock-port [dict get $snapshot clock_port] --sources {*}[dict get $snapshot sources]]
         foreach stage {post_synth post_route} {
-            puts [exec {*}$command $exporter export --results $directory --stage $stage]
+            puts [exec {*}$command -E $exporter export --results $directory --stage $stage]
         }
         return $directory
     }
