@@ -5,6 +5,7 @@ build/
 dist/
 out/
 /reports/core_report.txt
+/reports/core_report.html
 /reports/snr_latency.txt
 /reports/version_comparison.txt
 /reports/generated/

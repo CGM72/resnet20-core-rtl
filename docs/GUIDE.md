@@ -4,14 +4,14 @@ Tcl 명령은 Vivado Tcl Console에서 실행합니다. 기본 테스트와 보�
 
 ## 소스 준비
 
-[GitHub Releases](https://github.com/CGM72/resnet20-core-rtl/releases/tag/v1.2.7)에서 `resnet20-core-rtl-v1.2.7.zip`을 받아 새 폴더에 풉니다.
+[GitHub Releases](https://github.com/CGM72/resnet20-core-rtl/releases/tag/v1.2.8)에서 `resnet20-core-rtl-v1.2.8.zip`을 받아 새 폴더에 풉니다.
 
 ## 실행기 불러오기
 
 Vivado에서 열려 있는 사용자 프로젝트를 저장하고 닫습니다. `C:/path/to`를 ZIP을 푼 위치로 바꿉니다. 다른 버전이라면 압축을 풀어 생성된 폴더 이름을 사용합니다.
 
 ```tcl
-source {C:/path/to/resnet20-core-rtl-v1.2.7/scripts/vivado.tcl}
+source {C:/path/to/resnet20-core-rtl-v1.2.8/scripts/vivado.tcl}
 ```
 
 Vivado를 다시 시작하거나 실행기 파일을 교체했으면 `source`를 다시 실행합니다.
@@ -55,7 +55,7 @@ add_wave -r /tb_core/dut/*
 python verification/core/golden_ref/check_snr.py
 ```
 
-## 타이밍·Utilization 텍스트 저장
+## 타이밍·Utilization 보고서 저장
 
 프로젝트를 닫은 상태에서 실행합니다.
 
@@ -63,9 +63,11 @@ python verification/core/golden_ref/check_snr.py
 fpga::report
 ```
 
-`fpga::analyze core`도 배치·배선 후 같은 `reports/core_report.txt`를 저장하므로 연달아 실행할 필요가 없습니다.
+`fpga::analyze core`도 배치·배선 후 같은 보고서를 저장하므로 연달아 실행할 필요가 없습니다.
 `fpga::analyze core`는 분석 프로젝트를 열어 두며, `fpga::report`는 작업 후 자동으로 닫습니다.
 분석 클럭 제약을 지정하려면 `fpga::report 20.0`을 실행합니다. 이 흐름에는 Python이 필요 없습니다.
+브라우저에서 `reports/core_report.html`을 열면 Vivado 화면과 비슷하게 Setup·Hold·Pulse Width가 나란히 표시됩니다. Utilization 표에는 사용량과 가용량을 표시합니다.
+`reports/core_report.txt`는 버전 비교용으로 함께 저장합니다.
 텍스트에는 Setup·Hold·Pulse Width의 slack, 위반 endpoint와 상태, 그리고 LUT·FF·BRAM·DSP의 사용량과 사용률을 저장합니다.
 Vivado 원본은 해당 `build/analysis/core/run_*/` 아래에 있습니다.
 
@@ -93,7 +95,7 @@ fpga::compare
 별도 폴더에 풀어둔 버전은 각 보고서의 경로를 직접 넘겨도 됩니다.
 
 ```tcl
-fpga::compare {C:/projects/resnet20-core-rtl-v1.2.4/reports/core_report.txt} {C:/projects/resnet20-core-rtl-v1.2.7/reports/core_report.txt}
+fpga::compare {C:/projects/resnet20-core-rtl-v1.2.4/reports/core_report.txt} {C:/projects/resnet20-core-rtl-v1.2.8/reports/core_report.txt}
 ```
 
 1.2.1~1.2.3의 기존 자료는 `build/analysis/core/run_...` 폴더를 지정합니다. 측정 파일이 없는 항목은 `N/A`로 표시됩니다.

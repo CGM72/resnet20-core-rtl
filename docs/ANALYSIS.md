@@ -25,7 +25,12 @@ build/sim/tb_relu/
 Vivado 버전, FPGA part 또는 분석 클럭이 다르면 비교표 아래에 표시합니다. SNR과 latency는 같은 모델·입력·테스트벤치 스케줄의 결과끼리 비교합니다.
 원본 보고서 경로는 비교표에 기록됩니다.
 
-## 1.2.7 요약 보고서
+## 1.2.8 HTML 보고서
+
+`reports/core_report.html`을 브라우저에서 열면 Setup·Hold·Pulse Width를 나란히 확인하고, 자원별 사용량과 가용량을 Vivado의 모듈 표와 비슷한 배치로 볼 수 있습니다.
+버전별 HTML도 `reports/generated/v<버전>/`에 보존합니다.
+
+## 1.2.7 이상 텍스트 요약 보고서
 
 `reports/core_report.txt`에는 Setup·Hold·Pulse Width 각 한 행과 LUT·FF·BRAM·DSP Utilization 네 행이 포함됩니다.
 `Worst(ns)`와 `Total(ns)`는 Vivado의 worst slack과 total negative slack이고, `Failing`과 `Endpoints`는 위반 및 전체 endpoint 수입니다.

@@ -299,9 +299,13 @@ namespace eval fpga {
         puts "Utilization report: [file join $directory utilization post_route.rpt]"
         if {$target eq "core"} {
             set header [list "Implementation: measured | Vivado [version -short] | [dict get $cfg part] | $clock_period ns"                 "Implementation source: $directory"]
+            set timing [timing_metrics [file join $directory timing post_route.rpt]]
+            set resources [utilization_metrics [file join $directory utilization post_route.rpt]]
             write_text_report core_report.txt $header [list \
-                "Timing (post-route)" [compact_timing [file join $directory timing post_route.rpt]] \
-                "Utilization (post-route)" [compact_utilization [file join $directory utilization post_route.rpt]]]
+                "Timing (post-route)" [compact_timing $timing] \
+                "Utilization (post-route)" [compact_utilization $resources]]
+            source [file join $root scripts report_html.tcl]
+            write_html_report $cfg $clock_period $directory $timing $resources
         }
         return $directory
     }
@@ -334,8 +338,7 @@ namespace eval fpga {
         return $result
     }
 
-    proc compact_timing {path} {
-        set summary [format "%-12s %11s %11s %9s %9s %9s" "Check" "Worst(ns)" "Total(ns)" "Failing" "Endpoints" "Status"]
+    proc timing_metrics {path} {
         set text [read_text_file $path]
         set header_found 0
         set values {}
@@ -362,19 +365,29 @@ namespace eval fpga {
             }
             set values [lrepeat 12 N/A]
         }
+        set metrics {}
         foreach name {Setup Hold {Pulse Width}} {worst total failing endpoints} $values {
             set status N/A
             if {[string is double -strict $worst] && [string is double -strict $total] &&
                 [string is integer -strict $failing] && [string is integer -strict $endpoints] && $endpoints > 0} {
                 set status [expr {$worst < 0 || $total < 0 || $failing > 0 ? "VIOLATED" : "MET"}]
             }
-            append summary "\n" [format "%-12s %11s %11s %9s %9s %9s" $name $worst $total $failing $endpoints $status]
+            dict set metrics $name [list $worst $total $failing $endpoints $status]
+        }
+        return $metrics
+    }
+
+    proc compact_timing {metrics} {
+        set summary [format "%-12s %11s %11s %9s %9s %9s" "Check" "Worst(ns)" "Total(ns)" "Failing" "Endpoints" "Status"]
+        dict for {name values} $metrics {
+            append summary "\n" [format "%-12s %11s %11s %9s %9s %9s" $name {*}$values]
         }
         return $summary
     }
 
-    proc compact_utilization {path} {
-        set labels [dict create {slice luts} LUT {clb luts} LUT             {slice registers} FF {clb registers} FF             {block ram tile} BRAM {block ram} BRAM dsps DSP dsp48e1 DSP dsp48e2 DSP]
+    proc utilization_metrics {path} {
+        set labels [dict create {slice luts} LUT {clb luts} LUT             {slice registers} FF {clb registers} FF             {block ram tile} BRAM {block ram} BRAM dsps DSP dsp48e1 DSP dsp48e2 DSP \
+            slice SLICE {lut as logic} LOGIC]
         set values {}
         set used_index -1
         set available_index -1
@@ -406,9 +419,15 @@ namespace eval fpga {
             if {$percent_index >= 0} {set percent [lindex $columns $percent_index]}
             dict set values $key [list $count $capacity $percent]
         }
+        foreach key {LUT FF BRAM DSP} {
+            if {![dict exists $values $key]} {error "Cannot find $key utilization in $path"}
+        }
+        return $values
+    }
+
+    proc compact_utilization {values} {
         set summary {| Resource | Used | Available | Util% |}
         foreach {key label} {LUT {Slice LUTs} FF {Slice Registers} BRAM {Block RAM Tile} DSP DSPs} {
-            if {![dict exists $values $key]} {error "Cannot find $key utilization in $path"}
             foreach {count capacity percent} [dict get $values $key] {
                 append summary "\n| $label | $count | $capacity | $percent |"
             }

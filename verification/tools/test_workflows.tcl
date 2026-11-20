@@ -56,6 +56,8 @@ proc report_utilization {args} {
  puts $fd {| Site Type | Used | Fixed | Prohibited | Available | Util% |
 | Slice LUTs | 610 | 0 | 0 | 53200 | 1.15 |
 | Slice Registers | 544 | 0 | 0 | 106400 | 0.51 |
+| Slice | 235 | 0 | 0 | 13300 | 1.77 |
+| LUT as Logic | 598 | 0 | 0 | 53200 | 1.12 |
 | Block RAM Tile | 0 | 0 | 0 | 140 | 0.00 |
 | DSPs | 1 | 0 | 0 | 220 | 0.45 |
 | F7 Muxes | 0 | 0 | 0 | 26600 | 0.00 |}
@@ -146,6 +148,15 @@ if {$report_path ne [file join $fpga::root reports core_report.txt]} {error "Wro
 set fd [open $report_path r];set report_text [read $fd];close $fd
 foreach section {{Timing (post-route)} Setup Hold {Pulse Width} VIOLATED {Utilization (post-route)} {Slice LUTs} DSPs} {
  if {[string first $section $report_text] < 0} {error "Missing implementation report section $section"}
+}
+set html_report [file join $fpga::root reports core_report.html]
+set html [fpga::read_text_file $html_report]
+foreach label {{Design Timing Summary} {<h3>Setup</h3>} {<h3>Hold</h3>} {<h3>Pulse Width</h3>} {VIOLATED} {LUT as Logic} {(13300)} {<td>235</td>}} {
+ if {[string first $label $html] < 0} {error "Missing HTML report item $label"}
+}
+set report_version_file [string trim [fpga::read_text_file [file join $fpga::root VERSION]]]
+if {[fpga::read_text_file [file join $fpga::root reports generated v$report_version_file core_report.html]] ne $html} {
+ error "Versioned HTML report differs from the latest report"
 }
 if {"simulate" in $actions || $exec_count || $project ne "" || [regexp {SNR|STUB TIMING DETAILS|F7 Muxes} $report_text]} {
  error "Implementation report must skip simulation, Python and SNR"
