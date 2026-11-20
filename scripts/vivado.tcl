@@ -130,7 +130,7 @@ namespace eval fpga {
         return $sources
     }
 
-    proc sim {testbench {python_exe ""} {target ""}} {
+    proc sim {testbench {python_exe ""} {target ""} {record_waves 1}} {
         variable root
         require_closed
         set cfg [config $target]
@@ -180,8 +180,10 @@ namespace eval fpga {
         set_property xsim.simulate.runtime 0ns [get_filesets sim_1]
         set_property -dict [list xsim.simulate.xsim.more_options $options] [get_filesets sim_1]
         launch_simulation -simset sim_1 -mode behavioral
-        log_wave -r /$tb/*
-        add_wave /$tb/*
+        if {$record_waves} {
+            log_wave -r /$tb/*
+            add_wave /$tb/*
+        }
         run all
     }
 
@@ -299,12 +301,14 @@ namespace eval fpga {
         require_closed
         set python [python_command $python_exe]
         set snr_dir [file join $root build sim tb_core snr]
-        sim tb_core "" core
+        puts "Running full-model simulation without waveform recording"
+        sim tb_core "" core 0
         set snr [exec {*}$python [file join $root verification core golden_ref check_snr.py] --run $snr_dir]
         set latency [file join $snr_dir latency.txt]
         if {![file isfile $latency]} {error "Missing simulation latency report: $latency"}
         finish
 
+        puts "Running core synthesis, placement and routing"
         set directory [analyze core $clock_period]
         file copy $latency [file join $directory latency.txt]
         file copy [file join $snr_dir results.json] [file join $directory snr.json]

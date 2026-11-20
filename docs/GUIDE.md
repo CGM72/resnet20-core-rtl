@@ -70,7 +70,7 @@ Python은 PATH, Windows `py` 실행기, 일반 설치 폴더 및 Python Install 
 fpga::report {} {C:/path/to/python.exe}
 ```
 
-이 명령은 전체 모델 시뮬레이션과 core 합성·배치·배선을 순서대로 실행합니다. 출력 경로는 콘솔에 표시됩니다.
+이 명령은 파형 기록 없이 전체 모델 시뮬레이션을 수행한 뒤 core를 합성·배치·배선합니다. 출력 경로는 콘솔에 표시됩니다. 파형이 필요하면 `fpga::sim tb_core`를 실행합니다.
 배치·배선 목표 주기만 바꾸려면 예를 들어 `fpga::report 20.0`을 실행합니다.
 저장 파일과 latency 기준은 [분석 가이드](ANALYSIS.md#123-통합-보고서)를 참고합니다.
 

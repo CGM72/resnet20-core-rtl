@@ -15,8 +15,8 @@ proc update_compile_order {args} {}
 proc launch_simulation {args} {lappend ::actions simulate}
 proc close_sim {args} {if {$args ne "-force"} {error "Missing force close"};lappend ::actions close_sim}
 proc close_project {} {set ::project "";lappend ::actions close_project}
-proc log_wave {args} {}
-proc add_wave {args} {}
+proc log_wave {args} {lappend ::actions log_wave}
+proc add_wave {args} {lappend ::actions add_wave}
 proc run {args} {lappend ::actions run}
 rename exec workflow_real_exec
 proc exec {args} {
@@ -73,6 +73,7 @@ reset_mock
 fpga::finish
 fpga::sim tb_core
 if {$exec_count} {error "Full model test unexpectedly requires Python"}
+if {"log_wave" ni $actions || "add_wave" ni $actions} {error "Full model simulation must retain waveforms by default"}
 set sim_options [dict get $properties [list sim_1 -dict]]
 if {![string match *vectors_dir=* $sim_options] || ![string match *weight_path=* $sim_options]} {error "Missing full model plusargs"}
 fpga::finish
@@ -107,6 +108,7 @@ if {[lsearch -exact $actions close_sim] >= [lsearch -exact $actions synth] ||
 }
 rename exec {}
 rename workflow_stub_exec exec
+if {"log_wave" in $actions || "add_wave" in $actions} {error "Combined report must skip waveform recording"}
 puts "PASS combined core reports"
 # Custom source/config reuse remains supported.
 if {[llength $argv]} {
