@@ -53,9 +53,9 @@ MAC 곱/누산은 소수 비트가 20인 Q20입니다. 표의 숫자는 기본 �
 
 | 버전 | 해당 브랜치의 선언 사전 |
 |---|---|
-| 1.0.0 | [release/1.0.0](https://github.com/CGM72/resnet20-core-rtl/tree/release/1.0.0/docs/modules) |
-| 1.1.0 | [release/1.1.0](https://github.com/CGM72/resnet20-core-rtl/tree/release/1.1.0/docs/modules) |
-| 1.1.1 | [release/1.1.1](https://github.com/CGM72/resnet20-core-rtl/tree/release/1.1.1/docs/modules) |
+| 1.0.0 | [v1.0.0 릴리스 ZIP](https://github.com/CGM72/resnet20-core-rtl/releases/tag/v1.0.0) |
+| 1.1.0 | [v1.1.0 릴리스 ZIP](https://github.com/CGM72/resnet20-core-rtl/releases/tag/v1.1.0) |
+| 1.1.1 | [v1.1.1 릴리스 ZIP](https://github.com/CGM72/resnet20-core-rtl/releases/tag/v1.1.1) |
 
 1.0.0은 MAC/GAP의 pending 구조와 함수 지역 변수를, 1.1.0/1.1.1은 MAC/GAP 파이프라인과 skip FIFO를 설명합니다.
 1.1.1의 변수/동작은 1.1.0과 같으며 코드 표기와 주석만 정리되었습니다.
