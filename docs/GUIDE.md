@@ -88,7 +88,7 @@ Python 3.10 이상이 설치된 환경에서 실행합니다.
 fpga::report_sim
 ```
 
-결과는 `reports/snr_latency.txt`에 저장됩니다. 같은 입력·가중치·도구·RTL로 완료된 시뮬레이션이 있으면 재사용합니다. PATH에서 Verilator를 찾으면 사용하고, 없으면 XSim으로 실행합니다.
+결과는 `reports/snr_latency.txt`에 저장됩니다. latency는 시뮬레이션 시간(ns)과 클럭 수로 표시합니다. 같은 입력·가중치·도구·RTL로 완료된 시뮬레이션이 있으면 재사용합니다. PATH에서 Verilator를 찾으면 사용하고, 없으면 XSim으로 실행합니다.
 
 | 상황 | Tcl 명령 |
 | --- | --- |

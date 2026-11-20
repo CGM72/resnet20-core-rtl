@@ -526,7 +526,7 @@ namespace eval fpga {
         set header [list "Simulation: $simulation | $simulator | $simulator_version"             "Simulation source: $snr_dir"]
         return [write_text_report snr_latency.txt $header [list \
             "SNR (dB)" [read_text_file [file join $snr_dir snr.txt]] \
-            "Latency (cycles)" [read_text_file [file join $snr_dir latency.txt]]]]
+            "Latency (ns and cycles)" [read_text_file [file join $snr_dir latency.txt]]]]
     }
 
     # Optional PNG conversion, separate from native Vivado measurement.

@@ -8,6 +8,7 @@
     int queued, received, expected_count, compare_width, compare_channels;
     longint elapsed, deadline;
     longint cycle, first_input_cycle, last_output_cycle, inference_start_cycle;
+    time first_input_time, last_output_time, inference_start_time;
     bit comparing;
     bit check_directed;
     string compare_name;
@@ -46,8 +47,10 @@
         cycle++;
         if (nrst) begin
             if (comparing) begin
-                if (in_enable && first_input_cycle < 0)
+                if (in_enable && first_input_cycle < 0) begin
                     first_input_cycle = cycle;
+                    first_input_time = $time;
+                end
                 elapsed++;
                 if (elapsed > deadline)
                     $fatal(1, "%s: timeout after %0d cycles (%0d/%0d outputs)",
@@ -70,11 +73,18 @@
                 actual[index] = out_data;
                 received++;
                 last_output_cycle = cycle;
+                last_output_time = $time;
             end else if (out_enable !== 1'b0) begin
                 $fatal(1, "%s: unknown out_enable", compare_name);
             end
         end
     end
+
+    task automatic write_latency(input string name, input longint start_cycle, input time start_time);
+        // $time uses the enclosing testbench's 1 ns time unit.
+        $fdisplay(latency_report, "%s %0d %0d %0d %0d", name, start_cycle, last_output_cycle,
+                  last_output_time - start_time, last_output_cycle - start_cycle);
+    endtask
 
     task automatic finish_compare;
         repeat (CORE_PIPELINE_CYCLES + 1) begin

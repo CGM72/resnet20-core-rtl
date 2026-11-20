@@ -161,7 +161,7 @@ if {$project ne ""} {error "Finish did not close the report analysis project"}
 reset_mock
 set sim_report [fpga::report_sim $report_python xsim]
 set fd [open $sim_report r];set sim_text [read $fd];close $fd
-foreach section {{SNR (dB)} {Latency (cycles)}} {
+foreach section {{SNR (dB)} {Latency (ns and cycles)}} {
  if {[string first $section $sim_text] < 0} {error "Missing simulation report section $section"}
 }
 if {"simulate" ni $actions || "synth" in $actions || "log_wave" in $actions || "add_wave" in $actions} {

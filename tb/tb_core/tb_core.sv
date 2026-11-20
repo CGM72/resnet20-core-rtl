@@ -126,7 +126,7 @@ module tb_core #(
             latency_report = $fopen({snr_dir, "/latency.txt"}, "w");
             if (!latency_report) $fatal(1, "Cannot open latency report in %s", snr_dir);
             $fdisplay(latency_report, "# Input acceptance to final output sampling (rising edges)");
-            $fdisplay(latency_report, "layer first_input_cycle last_output_cycle latency_cycles");
+            $fdisplay(latency_report, "layer first_input_cycle last_output_cycle latency_ns latency_cycles");
             inference_start_cycle = -1;
         end
         weights_consumed = 0;
@@ -153,8 +153,7 @@ module tb_core #(
         else check_logit_snr();
         idle(2);
         if (extract_snr) begin
-            $fdisplay(latency_report, "inference %0d %0d %0d", inference_start_cycle,
-                      last_output_cycle, last_output_cycle - inference_start_cycle);
+            write_latency("inference", inference_start_cycle, inference_start_time);
             $fclose(latency_report);
             $fdisplay(snr_summary, "complete");
             $fclose(snr_summary);

@@ -87,9 +87,11 @@
         check_layer_reference(index);
         if (extract_snr) begin
             dump_layer_output(index);
-            if (inference_start_cycle < 0) inference_start_cycle = first_input_cycle;
-            $fdisplay(latency_report, "%s %0d %0d %0d", layer_name[index],
-                      first_input_cycle, last_output_cycle, last_output_cycle - first_input_cycle);
+            if (inference_start_cycle < 0) begin
+                inference_start_cycle = first_input_cycle;
+                inference_start_time = first_input_time;
+            end
+            write_latency(layer_name[index], first_input_cycle, first_input_time);
         end
         // Projection writes the shortcut bank while the main path keeps its input.
         for (int i = 0; i < result_words; i++) begin
