@@ -5,6 +5,8 @@ build/
 dist/
 out/
 /reports/core_report.txt
+/reports/version_comparison.txt
+/reports/generated/
 
 # ==============================
 # Vivado

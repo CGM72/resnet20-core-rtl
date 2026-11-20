@@ -4,14 +4,14 @@ Tcl 명령은 Vivado Tcl Console에서 실행합니다. 기본 테스트와 보�
 
 ## 소스 준비
 
-[GitHub Releases](https://github.com/CGM72/resnet20-core-rtl/releases/tag/v1.2.4)에서 `resnet20-core-rtl-v1.2.4.zip`을 받아 새 폴더에 풉니다.
+[GitHub Releases](https://github.com/CGM72/resnet20-core-rtl/releases/tag/v1.2.5)에서 `resnet20-core-rtl-v1.2.5.zip`을 받아 새 폴더에 풉니다.
 
 ## 실행기 불러오기
 
 Vivado에서 열려 있는 사용자 프로젝트를 저장하고 닫습니다. `C:/path/to`를 ZIP을 푼 위치로 바꿉니다. 다른 버전이라면 압축을 풀어 생성된 폴더 이름을 사용합니다.
 
 ```tcl
-source {C:/path/to/resnet20-core-rtl-v1.2.4/scripts/vivado.tcl}
+source {C:/path/to/resnet20-core-rtl-v1.2.5/scripts/vivado.tcl}
 ```
 
 Vivado를 다시 시작하거나 실행기 파일을 교체했으면 `source`를 다시 실행합니다.
@@ -57,7 +57,7 @@ python verification/core/golden_ref/check_snr.py
 
 ## 보고서 한 번에 저장
 
-1.2.4의 `scripts/vivado.tcl`을 불러온 뒤, 열린 프로젝트가 없는 Vivado Tcl Console에서 실행합니다. Python 3.10 이상이 필요합니다.
+1.2.5의 `scripts/vivado.tcl`을 불러온 뒤, 열린 프로젝트가 없는 Vivado Tcl Console에서 실행합니다. Python 3.10 이상이 필요합니다.
 타이밍·Utilization·SNR·latency를 함께 저장하려면 아래 명령부터 실행합니다.
 
 ```tcl
@@ -84,7 +84,25 @@ Vivado 프로그램은 계속 실행해 둡니다. `fpga::report`의 재사용 �
 새 시뮬레이션이 필요한 경우 PATH의 Verilator와 C++20 빌드 도구를 사용할 수 있습니다. Verilator가 PATH에 없으면 XSim을 사용합니다.
 Verilator 빌드 환경이 없는 경우에는 `fpga::report {} {} xsim`으로 XSim을 지정합니다. 파형이 필요하면 `fpga::sim tb_core`를 실행합니다.
 배치·배선 목표 주기만 바꾸려면 예를 들어 `fpga::report 20.0`을 실행합니다.
-저장 파일과 latency 기준은 [분석 가이드](ANALYSIS.md#124-통합-보고서)를 참고합니다.
+저장 파일과 latency 기준은 [분석 가이드](ANALYSIS.md#124-이상-통합-보고서)를 참고합니다.
+
+## 버전별 보고서 비교
+
+비교할 버전에서 각각 `fpga::report`를 실행합니다. 1.2.5부터는 `reports/generated/v<버전>/core_report.txt`에도 결과를 저장합니다.
+이 폴더를 한 저장소의 `reports/generated/` 아래에 모은 뒤 최신 실행기를 불러와 실행합니다.
+
+```tcl
+fpga::compare
+```
+
+별도 폴더에 풀어둔 버전은 각 보고서의 경로를 직접 넘겨도 됩니다.
+
+```tcl
+fpga::compare {C:/projects/resnet20-core-rtl-v1.2.4/reports/core_report.txt} {C:/projects/resnet20-core-rtl-v1.2.5/reports/core_report.txt}
+```
+
+1.2.1~1.2.3의 기존 자료는 `build/analysis/core/run_...` 폴더를 지정합니다. 측정 파일이 없는 항목은 `N/A`로 표시됩니다.
+비교 결과는 `reports/version_comparison.txt`에 저장됩니다.
 
 ## PNG 변환
 

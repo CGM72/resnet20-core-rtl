@@ -414,12 +414,18 @@ namespace eval fpga {
             close $fd
         }
 
+        set version_file [open [file join $root VERSION] r]
+        set release_version [string trim [read $version_file]]
+        close $version_file
+        if {![regexp {^[0-9]+\.[0-9]+\.[0-9]+$} $release_version]} {error "Invalid VERSION"}
         set output [file join $root reports core_report.txt]
+        set version_report [file join $root reports generated "v$release_version" core_report.txt]
         file mkdir [file dirname $output]
         set temporary [file join [file dirname $output] ".core-report-[pid]-[clock clicks].tmp"]
         set fd [open $temporary {WRONLY CREAT EXCL}]
         set failed [catch {
             puts $fd "ResNet-20 core report"
+            puts $fd "Version: $release_version"
             puts $fd "Implementation: $implementation | Vivado $vivado_version | $part | $clock_period ns"
             puts $fd "Implementation source: $directory"
             puts $fd "Simulation: $simulation | $simulator | $simulator_version"
@@ -439,7 +445,18 @@ namespace eval fpga {
         if {$failed || $close_failed} {file delete -force $temporary}
         if {$failed} {return -options $options $result}
         if {$close_failed} {return -options $close_options $close_result}
+        file mkdir [file dirname $version_report]
+        file copy -force $output $version_report
         puts "Core report: $output"
+        puts "Version report: $version_report"
+        return $output
+    }
+
+    proc compare {args} {
+        variable root
+        set python [python_command]
+        set output [exec {*}$python -E [file join $root scripts compare_reports.py]             --reports-dir [file join $root reports] -- {*}$args]
+        puts "Version comparison: $output"
         return $output
     }
 
