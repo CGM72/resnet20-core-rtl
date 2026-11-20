@@ -4,9 +4,9 @@
 
 ## 배포 기준
 
-- 문서 정리, 사용성 개선, 호환성 수정은 `main`에 커밋으로 모읍니다.
-- 새 배포가 필요할 때 검증한 변경을 묶어서 `VERSION`, 태그, ZIP, GitHub Release를 함께 갱신합니다. 즉시 배포가 필요한 수정은 별도로 묶을 수 있습니다.
-- 최신 개발 변경은 `main`에서, 배포본은 GitHub Releases에서 확인합니다. 기존 배포 태그는 해당 커밋을 계속 가리킵니다.
+- 문서 정리, 사용성 개선, 호환성 수정과 신규 기능은 `develop`에 커밋으로 모읍니다.
+- 새 배포가 필요할 때 `develop`의 검증된 변경을 `main`에 반영하고 `VERSION`, 태그, ZIP, GitHub Release를 함께 갱신합니다. 즉시 배포가 필요한 수정은 별도로 묶을 수 있습니다.
+- 최신 개발 변경은 [develop](https://github.com/CGM72/resnet20-core-rtl/tree/develop), 배포 기준 소스는 `main`, 배포 ZIP은 GitHub Releases에서 확인합니다. 기존 배포 태그는 해당 커밋을 계속 가리킵니다.
 
 ## 배포 내역
 
