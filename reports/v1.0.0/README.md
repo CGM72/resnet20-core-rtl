@@ -2,16 +2,16 @@
 
 ## 목차
 
-- [Timing](#timing)
-- [단독 top 자원](#단독-top-자원)
-- [core 내부 계층 자원](#core-내부-계층-자원)
-- [원본 이미지](#원본-이미지)
+1. [Timing](#1-timing)
+2. [단독 top 자원](#2-단독-top-자원)
+3. [core 내부 계층 자원](#3-core-내부-계층-자원)
+4. [원본 이미지](#4-원본-이미지)
 
 [전체 버전 비교](../README.md) · [waveform 가이드](../../docs/ANALYSIS.md)
 
 사용자 제공 이미지 기준, 10ns(100MHz), 모듈 OOC post_route 결과입니다. core·MAC·GAP의 Setup 위반이 있습니다.
 
-## Timing
+## 1. Timing
 
 단위 ns. Setup/Hold/Pulse 위반 수는 failing endpoints입니다.
 
@@ -24,7 +24,7 @@
 | MaxPool | +4.808 | 0.000 | 0 | 0.169 | 0.000 | 0 | 4.500 | 0.000 | 0 |
 | GAP | -59.289 | -944.026 | 16 | 0.242 | 0.000 | 0 | 4.500 | 0.000 | 0 |
 
-## 단독 top 자원
+## 2. 단독 top 자원
 
 `—`는 이미지에 보이지 않는 열입니다. Slice는 Slice 개수이며 Slice LUTs와 다릅니다.
 
@@ -37,7 +37,7 @@
 | MaxPool | 80 | 66 | 37 | 80 | — | — |
 | GAP | 735 | 131 | 246 | 735 | — | — |
 
-## core 내부 계층 자원
+## 3. core 내부 계층 자원
 
 아래는 UT_core 이미지의 내부 행이며, 위 단독 모듈 측정값과 구분합니다.
 `u_mac`은 bias를 받는 mac_accumulate입니다.
@@ -50,7 +50,7 @@
 | u_relu | 17 | 34 | 12 | 17 | — | 0 |
 | u_residual | 20 | 34 | 18 | 20 | — | 0 |
 
-## 원본 이미지
+## 4. 원본 이미지
 
 TR은 Timing Summary, UT는 Utilization입니다. 업로드된 원본 파일명을 유지했습니다.
 
@@ -63,10 +63,10 @@ TR은 Timing Summary, UT는 Utilization입니다. 업로드된 원본 파일명�
 | MaxPool | [TR_1.0.0_pooling.png](TR_1.0.0_pooling.png) | [UT_1.0.0_pooling.png](UT_1.0.0_pooling.png) |
 | GAP | [TR_1.0.0_gap.png](TR_1.0.0_gap.png) | [UT_1.0.0_gap.png](UT_1.0.0_gap.png) |
 
-### core 원본
+### 4.1 core 원본
 
 ![1.0.0 core timing](TR_1.0.0_core.png)
 
 ![1.0.0 core utilization](UT_1.0.0_core.png)
 
-원본 RPT·제약파일·실행 SHA는 미첨부입니다. 상세한 [자료 범위](../README.md#자료-출처)를 확인하십시오.
+원본 RPT·제약파일·실행 SHA는 미첨부입니다. 상세한 [자료 범위](../README.md#5-자료-출처)를 확인하십시오.

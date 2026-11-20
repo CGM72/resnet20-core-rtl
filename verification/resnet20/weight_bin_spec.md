@@ -2,13 +2,13 @@
 
 ## 목차
 
-- [파일 구성](#파일-구성)
-- [추론 수치 규칙](#추론-수치-규칙)
-- [재현 및 검증](#재현-및-검증)
+1. [파일 구성](#1-파일-구성)
+2. [추론 수치 규칙](#2-추론-수치-규칙)
+3. [재현 및 검증](#3-재현-및-검증)
 
 대상 모델은 CIFAR-10 입력 `N×3×32×32`를 받아 10개 로짓을 내는 `chenyaofo/pytorch-cifar-models`의 ResNet-20이다. `layer2.0`과 `layer3.0`은 stride 2의 `1×1` projection shortcut을 쓴다. Conv 21개에 추론용 BatchNorm을 접고 FC 1개를 그대로 내보낸다. [모델 소스](https://github.com/chenyaofo/pytorch-cifar-models/blob/master/pytorch_cifar_models/resnet.py) · [사전 학습 체크포인트](https://github.com/chenyaofo/pytorch-cifar-models/releases/download/resnet/cifar10_resnet20-4118986f.pt)
 
-## 파일 구성
+## 1. 파일 구성
 
 - 워드 형식은 **부호 있는 16비트 2의 보수, little-endian, Q5.10**이다. 정수 워드 `q`의 실수값은 `q / 1024`이다. 실수 범위는 `−32`부터 `31.9990234375`까지다.
 - 양자화는 `q = sign(x) × floor(abs(x) × 1024 + 0.5)`를 사용한다. 반올림 결과가 int16 범위를 벗어나면 추출을 중단한다.
@@ -16,7 +16,7 @@
 - 총 270,896개 가중치와 794개 bias가 들어 있다. 파일 크기는 **543,380바이트**다.
 - SHA-256은 `549020eba9a23f1c60694839a2ca07b9ece22267dbee886bee7f6a92c242b992`다.
 
-### 워드 순서와 주소
+### 1.1 워드 순서와 주소
 
 **빠르게 바뀌는 축부터 `width → height → depth → channel`**이다. Conv 가중치의 `width`, `height`는 커널의 `kx`, `ky`, `depth`는 입력 채널 `ic`, 마지막 `channel`은 출력 채널 `oc`다. 아래 식의 좌표는 모두 0부터 시작한다. Feature의 HWC 순서와 구분하여 가중치는 아래 OIHW 주소식을 사용한다.
 
@@ -27,7 +27,7 @@ fc_byte   = weight_offset + 2 * (oc * 64 + ic)
 bias_byte = bias_offset   + 2 * oc
 ```
 
-#### 커널 저장 예시
+#### 1.1.1 커널 저장 예시
 
 입력 채널과 출력 채널이 각각 1개인 `4×4` feature map과 `2×2` 커널을 예로 든다. stride는 1, padding은 0, bias는 `0.5`이므로 출력은 `3×3`이다.
 
@@ -77,7 +77,7 @@ Projection이 있는 블록은 Controller의 `SKIP_CONV → CONV_RELU → CONV_R
 | `layer3.2.conv2` | `3×3 / 1` | `64→64` | 36,864 | 468,224 | 541,952 |
 | `fc` | — | `64→10` | 640 | 542,080 | 543,360 |
 
-## 추론 수치 규칙
+## 2. 추론 수치 규칙
 
 BN 폴딩은 채널별 `a = γ / sqrt(running_var + ε)`를 계산해 `W′ = a × W`, `b′ = β + a × (b − running_mean)`으로 변환한다. 이 모델의 원본 Conv에는 bias가 없으므로 `b = 0`이다. projection shortcut도 동일한 규칙으로 접는다.
 
@@ -88,7 +88,7 @@ BN 폴딩은 채널별 `a = γ / sqrt(running_var + ε)`를 계산해 `W′ = a 
 
 검증기는 MAC을 `float64`로 계산한 뒤 정수로 변환한다. 최대 576개 int16 곱과 스케일을 맞춘 bias의 절댓값 합이 `2^53` 미만이므로 정수 곱·누산을 정확히 표현할 수 있다. 재양자화, residual 덧셈, GAP에는 정수 연산을 사용한다.
 
-## 재현 및 검증
+## 3. 재현 및 검증
 
 Python 3.11 이상에서 `torch`, `numpy`, `pyarrow`, `Pillow`를 설치하고 이 폴더에서 실행한다.
 
@@ -101,7 +101,7 @@ python verify_bin.py --samples 10000
 
 원본 FP32 모델의 로짓을 기준으로 전체 이미지와 클래스에 대해 `SNR = 10 log10(Σref² / Σ(ref − test)²)`를 계산한다. BN 폴딩만 한 FP32, bin에서 읽은 가중치와 bias만 Q5.10인 모델, 활성값까지 Q5.10인 모델을 각각 비교한다. 두 bin 실행의 기본 판정 기준은 기존 프로젝트의 수치 판정 기준과 같은 30 dB다. `--min-snr`로 변경할 수 있다. core TB의 별도 로짓 SNR 판정 기준은 50 dB다.
 
-### CIFAR-10 테스트 이미지 10,000장 실측
+### 3.1 CIFAR-10 테스트 이미지 10,000장 실측
 
 | 실행 | 로짓 SNR | Top-1 정확도 | FP32 예측 일치율 |
 |---|---:|---:|---:|

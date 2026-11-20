@@ -2,19 +2,19 @@
 
 ## 목차
 
-- [결과 파일 찾기](#결과-파일-찾기)
-- [기능 테스트](#기능-테스트)
-- [타이밍과 Utilization](#타이밍과-utilization)
-- [SNR과 latency](#snr과-latency)
-- [파형 공통 기준](#파형-공통-기준)
-- [1.0.0 모듈별 파형](#100-모듈별-파형)
-- [1.1.0 이상 모듈별 파형](#110-이상-모듈별-파형)
-- [1.2.3 보고서 저장 위치](#123-보고서-저장-위치)
+1. [결과 파일 찾기](#1-결과-파일-찾기)
+2. [기능 테스트](#2-기능-테스트)
+3. [타이밍과 Utilization](#3-타이밍과-utilization)
+4. [SNR과 latency](#4-snr과-latency)
+5. [파형 공통 기준](#5-파형-공통-기준)
+6. [1.0.0 모듈별 파형](#6-100-모듈별-파형)
+7. [1.1.0 이상 모듈별 파형](#7-110-이상-모듈별-파형)
+8. [1.2.3 보고서 저장 위치](#8-123-보고서-저장-위치)
 
 [실행 가이드](GUIDE.md)에서 Tcl 명령을 실행한 뒤 결과를 아래 순서로 확인합니다.
 먼저 `VERSION`을 확인해 파형의 신호와 지연 기준을 선택합니다.
 
-## 결과 파일 찾기
+## 1. 결과 파일 찾기
 
 | 필요한 결과 | 저장 위치 |
 | --- | --- |
@@ -23,7 +23,7 @@
 | 레이어별 SNR·latency와 전체 모델 결과 | `reports/snr_latency.txt` |
 | 기능 테스트 로그와 파형 | `build/sim/<테스트벤치>/` |
 
-## 기능 테스트
+## 2. 기능 테스트
 
 Vivado Console과 시뮬레이션 로그에서 `[ PASS ] ALL TESTS PASSED`를 확인합니다.
 실패 시 최초 `$fatal`의 클럭·인덱스·기대값·실제값을 찾아 같은 시점의 파형을 확인합니다.
@@ -39,7 +39,7 @@ build/sim/tb_relu/
     *.wdb   파형
 ```
 
-## 타이밍과 Utilization
+## 3. 타이밍과 Utilization
 
 `build/analysis/<top>/latest.txt`에서 마지막으로 완료된 실행 경로를 찾습니다.
 `run_info.tcldict`, `clock.xdc`, `sources/`에서 측정 조건을 확인합니다.
@@ -85,12 +85,12 @@ OOC 결과의 판정 범위는 분석 대상과 적용된 제약입니다. 보�
 
 [버전별 100 MHz 실측 이미지와 비교표](../reports/README.md)
 
-## SNR과 latency
+## 4. SNR과 latency
 
 `fpga::report_sim`으로 측정한 latency는 첫 입력을 받는 상승 에지부터 마지막 유효 출력을 읽는 상승 에지까지의 클럭 차이입니다.
 `inference` 행은 stem의 첫 입력부터 FC의 마지막 출력까지이며, 레이어 사이의 테스트벤치 대기 클럭도 포함합니다.
 
-### RTL 출력과 SNR 추출
+### 4.1 RTL 출력과 SNR 추출
 
 `fpga::sim tb_core`의 RTL 덤프는 `build/sim/tb_core/snr/`에 있습니다. `fpga::report_sim`의 덤프 경로는 보고서의 `Simulation source`에서 확인합니다.
 
@@ -103,7 +103,7 @@ OOC 결과의 판정 범위는 분석 대상과 적용된 제약입니다. 보�
 
 Python은 같은 입력과 가중치로 부동소수점 추론을 실행하고, RTL의 레이어 출력을 기존 정수 기준값과 대조합니다. 출력 단어를 `2**frac_bits`로 나눈 다음 `10*log10(sum(ref²)/sum((actual-ref)²))`로 SNR을 계산합니다. 오차 전력이 0이면 JSON에 `"inf"`를 기록합니다. 마지막 블록의 레이어 출력은 GAP 이후의 채널 벡터입니다. Python은 최종 로짓에 기존 50 dB 기준을 적용합니다. 중간 레이어 SNR은 진단용입니다.
 
-## 파형 공통 기준
+## 5. 파형 공통 기준
 
 E0은 입력을 수신하는 상승 에지이며 출력은 해당 에지의 레지스터 갱신 직후 기준입니다.
 
@@ -171,9 +171,9 @@ result_valid[i]/result_data[i]와 비교합니다. 인덱스는 MAC=0, bias MAC=
 core TB는 expected[], expected_due[], queued, received, cycle을 함께 볼 수 있습니다.
 expected_due=-1인 항목은 출력 순서/값을 검사하고 정확한 출력 클럭은 지정하지 않은 경우입니다.
 
-## 1.0.0 모듈별 파형
+## 6. 1.0.0 모듈별 파형
 
-### MAC: mac.v / mac_accumulate
+### 6.1 MAC: mac.v / mac_accumulate
 
 | 신호 | 정상 동작 | 확인 이유 |
 |---|---|---|
@@ -190,7 +190,7 @@ enable=0이면 두 단계 우회, 활성 iteration=0이면 입력 폐기와 부�
 1.0.0은 마지막 항에서 곱셈·누산·반올림·포화가 긴 조합 경로로 연결됩니다.
 behavioral 값이 맞아도 실제 100MHz 타이밍이 맞는 것은 아닙니다.
 
-### Residual: residual.v
+### 6.2 Residual: residual.v
 
 | 확인 신호 | 정상 동작 | 이유 |
 |---|---|---|
@@ -203,7 +203,7 @@ behavioral 값이 맞아도 실제 100MHz 타이밍이 맞는 것은 아닙니�
 enable=0이면 skip_data와 관계없이 in_data를 전달합니다.
 공간/채널 정합은 외부의 책임이며, 이 모듈은 받은 두 값의 합만 계산합니다.
 
-### ReLU: relu.v
+### 6.3 ReLU: relu.v
 
 | 확인 신호 | 정상 동작 | 이유 |
 |---|---|---|
@@ -213,7 +213,7 @@ enable=0이면 skip_data와 관계없이 in_data를 전달합니다.
 
 확인 예: enable=1에서 -1024→0, 0→0, 1024→1024. enable=0에서는 -1024도 그대로 전달합니다.
 
-### MaxPool: pooling.v
+### 6.4 MaxPool: pooling.v
 
 | 확인 신호 | 정상 동작 | 이유 |
 |---|---|---|
@@ -226,7 +226,7 @@ enable=0이면 skip_data와 관계없이 in_data를 전달합니다.
 마지막 항 에지에 maximum과 input_count는 0으로 초기화될 수 있으므로 결과는 pending_data/out_data에서 확인합니다.
 iteration=0은 입력 폐기, enable=0은 2단계 우회입니다.
 
-### GAP: general_average_pooling.v
+### 6.5 GAP: general_average_pooling.v
 
 | 신호 | 정상 동작 | 확인 이유 |
 |---|---|---|
@@ -241,7 +241,7 @@ round_mean() 내부는 함수의 지역 변수이므로 파형 노출 여부는 
 pending_sum/pending_divisor/out_data를 기준으로 비교하십시오.
 1.0.0에는 supported/input_shift/half/s0_sum 같은 1.1.0의 신호가 없습니다.
 
-### core.v: 단계 연결과 main/skip 보관
+### 6.6 core.v: 단계 연결과 main/skip 보관
 
 | 신호 | 정상 동작 | 확인 이유 |
 |---|---|---|
@@ -275,9 +275,9 @@ Pool/GAP 우회에서 마지막 MAC 항이 L, skip 수신이 S이면:
 빠른 skip/늦은 skip/연속 그룹/입력 공백/reset 중간 취소를 확인합니다.
 Pool/GAP 활성에서는 그룹을 모으므로 입력마다 최종 출력이 생기지 않습니다.
 
-## 1.1.0 이상 모듈별 파형
+## 7. 1.1.0 이상 모듈별 파형
 
-### MAC: mac.v / mac_accumulate
+### 7.1 MAC: mac.v / mac_accumulate
 
 | 확인 신호 | 정상 동작 | 이유 |
 |---|---|---|
@@ -302,7 +302,7 @@ last_input은 조합 신호이므로 수신 에지 직전 값 또는 등록된 s
 - N=1, in_data=32767, kernel_data=32767, bias=0이면 출력은 32767로 포화합니다.
 - enable=0이면 입력과 같은 값이 동일한 5단계 지연으로 출력됩니다.
 
-### Residual: residual.v
+### 7.2 Residual: residual.v
 
 | 확인 신호 | 정상 동작 | 이유 |
 |---|---|---|
@@ -315,7 +315,7 @@ last_input은 조합 신호이므로 수신 에지 직전 값 또는 등록된 s
 enable=0이면 skip_data와 관계없이 in_data를 전달합니다.
 공간/채널 정합은 외부의 책임이며, 이 모듈은 받은 두 값의 합만 계산합니다.
 
-### ReLU: relu.v
+### 7.3 ReLU: relu.v
 
 | 확인 신호 | 정상 동작 | 이유 |
 |---|---|---|
@@ -325,7 +325,7 @@ enable=0이면 skip_data와 관계없이 in_data를 전달합니다.
 
 확인 예: enable=1에서 -1024→0, 0→0, 1024→1024. enable=0에서는 -1024도 그대로 전달합니다.
 
-### MaxPool: pooling.v
+### 7.4 MaxPool: pooling.v
 
 | 확인 신호 | 정상 동작 | 이유 |
 |---|---|---|
@@ -338,7 +338,7 @@ enable=0이면 skip_data와 관계없이 in_data를 전달합니다.
 마지막 항 에지에 maximum과 input_count는 0으로 초기화될 수 있으므로 결과는 pending_data/out_data에서 확인합니다.
 iteration=0은 입력 폐기, enable=0은 2단계 우회입니다.
 
-### GAP: general_average_pooling.v
+### 7.5 GAP: general_average_pooling.v
 
 | 확인 신호 | 정상 동작 | 이유 |
 |---|---|---|
@@ -356,7 +356,7 @@ iteration=0은 입력 폐기, enable=0은 2단계 우회입니다.
 - enable=0이면 N의 지원 여부와 관계없이 입력을 4단계로 우회합니다.
 완료 후 accumulator 값이 남아 있어도 정상입니다. 다음 그룹의 첫 항은 input_count=0을 보고 새 합으로 덮어씁니다.
 
-### core.v: 단계 연결과 skip 정렬
+### 7.6 core.v: 단계 연결과 skip 정렬
 
 1.2.2 이상에서는 core DUT 아래의 `u_conv`에서 MAC 결과와 skip 정렬 신호를 확인합니다.
 MAC 내부 경로는 `/tb_core_stream/dut/u_conv/u_mac/`입니다. 아래 표의 `mac_*`, `skip_*`, `waiting_for_skip`, `pair_valid`는 `u_conv` 내부 신호입니다.
@@ -392,7 +392,7 @@ skip_push와 skip_pop이 동시에 1이면 skip_count가 유지되는 것이 정
 FIFO가 비어 있고 main/skip이 동시에 준비되면 직접 전달하여 skip_count가 증가하지 않을 수 있습니다.
 현재 FIFO 깊이는 4이며 overflow와 보관 MAC 덮어쓰기는 시뮬레이션 assertion으로도 검사합니다.
 
-#### 전체 우회 시 기준 타이밍
+#### 7.6.1 전체 우회 시 기준 타이밍
 
 모든 연산 enable=0, E0에 입력 1024를 한 번 수신한 경우입니다.
 
@@ -407,7 +407,7 @@ FIFO가 비어 있고 main/skip이 동시에 준비되면 직접 전달하여 sk
 
 출력은 E14 직후 유효해지고 다음 상승 에지 E15에서 수신측이 소비합니다.
 
-#### skip이 빠른 경우와 늦은 경우
+#### 7.6.2 skip이 빠른 경우와 늦은 경우
 
 MAC N=1, 입력 1024, 가중치 1024, bias=0, skip=512, Pool/GAP 우회 예입니다.
 
@@ -421,7 +421,7 @@ MAC N=1, 입력 1024, 가중치 1024, bias=0, skip=512, Pool/GAP 우회 예입�
 N=1의 MAC/skip 쌍을 연속 공급하는 구간에서는 FIFO 포인터가 순환해도 출력 순서가 유지되는지 확인합니다.
 Pool/GAP를 활성화하면 각각의 반복값만큼 결과가 모이므로 입력 하나마다 최종 출력이 생기지 않습니다.
 
-### 권장 확인 순서
+### 7.7 권장 확인 순서
 
 1. reset: valid/카운터 초기화와 진행 중 결과 취소.
 2. 전체 우회: 값 보존과 E0→E14 정렬.
@@ -435,7 +435,7 @@ Pool/GAP를 활성화하면 각각의 반복값만큼 결과가 모이므로 입
 Behavioral waveform은 기능과 클럭별 정렬을 확인합니다.
 100MHz의 실제 setup/hold 충족 여부는 배치배선 후 Timing Report로 별도 확인합니다.
 
-## 1.2.3 보고서 저장 위치
+## 8. 1.2.3 보고서 저장 위치
 
 1.2.3에서 생성한 통합 보고서는 `build/analysis/core/run_*/` 아래에 있습니다.
 
