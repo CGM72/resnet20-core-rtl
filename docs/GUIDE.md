@@ -57,7 +57,8 @@ python verification/core/golden_ref/check_snr.py
 
 ## 보고서 한 번에 저장
 
-Vivado Tcl Console에서 실행합니다. Python 3.10 이상이 필요합니다.
+1.2.4의 `scripts/vivado.tcl`을 불러온 뒤, 열린 프로젝트가 없는 Vivado Tcl Console에서 실행합니다. Python 3.10 이상이 필요합니다.
+타이밍·Utilization·SNR·latency를 함께 저장하려면 아래 명령부터 실행합니다.
 
 ```tcl
 fpga::report
@@ -69,6 +70,15 @@ Python은 PATH, Windows `py` 실행기, 일반 설치 폴더 및 Python Install 
 ```tcl
 fpga::report {} {C:/path/to/python.exe}
 ```
+
+이미 `fpga::analyze core`를 실행했다면 분석 프로젝트가 열려 있습니다. 생성된 분석 프로젝트를 닫은 뒤 통합 보고서를 실행합니다.
+
+```tcl
+fpga::finish
+fpga::report
+```
+
+Vivado 프로그램은 계속 실행해 둡니다. `fpga::report`의 재사용 기록은 통합 보고서 실행에서 생성되므로, 별도로 실행한 `fpga::analyze core`의 배치·배선 결과는 첫 통합 보고서 실행에서 다시 측정할 수 있습니다.
 
 결과는 `reports/core_report.txt`에 저장됩니다. 저장소의 RTL·테스트 벡터·가중치·도구·분석 조건이 같으면 완료된 측정값을 재사용합니다.
 새 시뮬레이션이 필요한 경우 PATH의 Verilator와 C++20 빌드 도구를 사용할 수 있습니다. Verilator가 PATH에 없으면 XSim을 사용합니다.
