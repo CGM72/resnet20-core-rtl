@@ -15,10 +15,10 @@ git switch --detach v1.1.1
 
 ## 실행기 불러오기
 
-Vivado에서 열려 있는 사용자 프로젝트를 저장하고 닫습니다. 예시 경로를 실제 프로젝트 경로로 바꿉니다.
+Vivado에서 열려 있는 사용자 프로젝트를 저장하고 닫습니다. `C:/path/to`를 ZIP을 푼 위치로 바꿉니다. 다른 버전이라면 압축을 풀어 생성된 폴더 이름을 사용합니다.
 
 ```tcl
-source {C:/path/to/resnet20-core-rtl/scripts/vivado.tcl}
+source {C:/path/to/resnet20-core-rtl-v1.2.2/scripts/vivado.tcl}
 ```
 
 Vivado를 다시 시작하거나 실행기 파일을 교체했으면 `source`를 다시 실행합니다.
