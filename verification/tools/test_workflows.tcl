@@ -144,21 +144,12 @@ fpga::finish
 if {"close_sim" in $actions} {error "Closing an analysis project must not close a simulation"}
 reset_mock
 set report_path [fpga::report 20.0]
-if {$report_path ne [file join $fpga::root reports core_report.txt]} {error "Wrong text report destination"}
-set fd [open $report_path r];set report_text [read $fd];close $fd
-foreach section {{Timing (post-route)} Setup Hold {Pulse Width} VIOLATED {Utilization (post-route)} {Slice LUTs} DSPs} {
- if {[string first $section $report_text] < 0} {error "Missing implementation report section $section"}
-}
-set html_report [file join $fpga::root reports core_report.html]
-set html [fpga::read_text_file $html_report]
+if {$report_path ne [file join $fpga::root reports core_report.html]} {error "Wrong HTML report destination"}
+set html [fpga::read_text_file $report_path]
 foreach label {{Design Timing Summary} {<h3>Setup</h3>} {<h3>Hold</h3>} {<h3>Pulse Width</h3>} {VIOLATED} {LUT as Logic} {(13300)} {<td>235</td>}} {
  if {[string first $label $html] < 0} {error "Missing HTML report item $label"}
 }
-set report_version_file [string trim [fpga::read_text_file [file join $fpga::root VERSION]]]
-if {[fpga::read_text_file [file join $fpga::root reports generated v$report_version_file core_report.html]] ne $html} {
- error "Versioned HTML report differs from the latest report"
-}
-if {"simulate" in $actions || $exec_count || $project ne "" || [regexp {SNR|STUB TIMING DETAILS|F7 Muxes} $report_text]} {
+if {"simulate" in $actions || $exec_count || $project ne "" || [regexp {SNR|STUB TIMING DETAILS|F7 Muxes} $html]} {
  error "Implementation report must skip simulation, Python and SNR"
 }
 if {![string match {* -period 20.0 *} [lindex $constraint_texts end]]} {error "Report did not forward period"}

@@ -78,13 +78,11 @@ table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nu
         append html "\n<p class='source'>Vivado analysis folder: [html_escape $directory]</p>\n</body></html>\n"
 
         set output [file join $root reports core_report.html]
-        set version_report [file join $root reports generated "v$release_version" core_report.html]
-        foreach path [list $output $version_report] {
-            set fd [open $path w]
-            fconfigure $fd -encoding utf-8
-            puts -nonewline $fd $html
-            close $fd
-        }
+        file mkdir [file dirname $output]
+        set fd [open $output w]
+        fconfigure $fd -encoding utf-8
+        puts -nonewline $fd $html
+        close $fd
         puts "HTML report: $output"
     }
 }

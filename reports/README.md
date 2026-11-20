@@ -1,6 +1,6 @@
 # 버전별 Vivado 리포트
 
-1.2.x 이후의 비교에는 Vivado가 생성한 타이밍·Utilization 텍스트와 RTL 시뮬레이션의 SNR·latency를 사용합니다. 1.2.5의 `fpga::compare`로 비교표를 만듭니다. [버전 비교 절차](../docs/GUIDE.md#버전별-보고서-비교)
+현재 버전에서 타이밍·Utilization은 `core_report.html`에 저장합니다. SNR·latency는 별도 시뮬레이션으로 저장합니다. [실행 가이드](../docs/GUIDE.md#타이밍utilization-보고서-저장)
 
 ## 1.0.x·1.1.x 캡처 자료
 

@@ -19,37 +19,11 @@ build/sim/tb_relu/
     *.wdb   파형
 ```
 
-## 1.2.5 버전 비교
+## 1.2.9 보고서 저장 위치
 
-`fpga::compare`는 버전별 텍스트에서 WNS·TNS·WHS·THS·WPWS·TPWS, LUT·FF·BRAM·DSP, 최종 로짓 SNR, 전체 추론 클럭 수를 읽습니다.
-Vivado 버전, FPGA part 또는 분석 클럭이 다르면 비교표 아래에 표시합니다. SNR과 latency는 같은 모델·입력·테스트벤치 스케줄의 결과끼리 비교합니다.
-원본 보고서 경로는 비교표에 기록됩니다.
-
-## 1.2.8 HTML 보고서
-
-`reports/core_report.html`을 브라우저에서 열면 Setup·Hold·Pulse Width를 나란히 확인하고, 자원별 사용량과 가용량을 Vivado의 모듈 표와 비슷한 배치로 볼 수 있습니다.
-버전별 HTML도 `reports/generated/v<버전>/`에 보존합니다.
-
-## 1.2.7 이상 텍스트 요약 보고서
-
-`reports/core_report.txt`에는 Setup·Hold·Pulse Width 각 한 행과 LUT·FF·BRAM·DSP Utilization 네 행이 포함됩니다.
-`Worst(ns)`와 `Total(ns)`는 Vivado의 worst slack과 total negative slack이고, `Failing`과 `Endpoints`는 위반 및 전체 endpoint 수입니다.
-원본 타이밍 경로와 상세 자원 리포트는 `build/analysis/core/run_*/`에서 확인합니다.
-
-## 1.2.6 이상 보고서 분리
-
-`fpga::report`와 `fpga::analyze core`는 배치·배선 후 타이밍과 Utilization을 `reports/core_report.txt`에 저장합니다.
-`fpga::report_sim`은 전체 모델 시뮬레이션의 SNR과 latency를 `reports/snr_latency.txt`에 저장합니다.
-두 파일 모두 `reports/generated/v<버전>/`에도 저장됩니다. [실행 가이드](GUIDE.md)
-
-## 1.2.4~1.2.5 통합 보고서
-
-`reports/core_report.txt`에 배치·배선 후 Timing Summary와 Utilization, 레이어별·최종 로짓 SNR, 레이어별·전체 추론 latency를 함께 저장합니다.
-보고서 머리말에서 각 측정의 실행 경로, 재사용 여부, 시뮬레이터, Vivado 버전, FPGA part 및 분석 클럭 제약을 확인할 수 있습니다.
-
-시뮬레이션과 배치·배선 결과는 별도로 재사용합니다. 분석 클럭 제약만 바뀌면 시뮬레이션의 SNR과 latency 클럭 수는 재사용하고 배치·배선만 다시 수행합니다.
-새 방식으로 만든 완료 기록은 `build/report_cache/`에 저장됩니다. 이전 버전에서 생성한 보고서는 이 기록이 없어 첫 실행 때 새로 측정합니다.
-같은 이름의 최종 텍스트는 후속 실행이 완료될 때 갱신됩니다.
+`fpga::report`와 `fpga::analyze core`는 배치·배선 후 Setup·Hold·Pulse Width와 Utilization을 `reports/core_report.html`에 저장합니다. 브라우저에서 바로 열 수 있습니다.
+타이밍 경로와 세부 자원 사용량은 `build/analysis/core/run_*/` 아래의 Vivado 원본에서 확인합니다.
+`fpga::report_sim`은 전체 모델 SNR과 latency를 `reports/snr_latency.txt`에 저장합니다. [실행 가이드](GUIDE.md)
 
 ## 1.2.3 통합 보고서
 

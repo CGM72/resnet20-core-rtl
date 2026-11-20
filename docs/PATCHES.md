@@ -4,6 +4,7 @@
 
 | 버전 | 변경 내역 | 배포 소스 |
 | --- | --- | --- |
+| 1.2.9 | 타이밍·Utilization은 HTML 하나로 저장하고 비교용 텍스트와 비교 명령 제거 | [v1.2.9 릴리스](https://github.com/CGM72/resnet20-core-rtl/releases/tag/v1.2.9) · [ZIP](https://github.com/CGM72/resnet20-core-rtl/raw/refs/heads/main/downloads/resnet20-core-rtl-v1.2.9.zip) |
 | 1.2.8 | Vivado 화면과 비슷한 레이아웃의 `core_report.html` 추가 | [v1.2.8 릴리스](https://github.com/CGM72/resnet20-core-rtl/releases/tag/v1.2.8) · [ZIP](https://github.com/CGM72/resnet20-core-rtl/raw/refs/heads/main/downloads/resnet20-core-rtl-v1.2.8.zip) |
 | 1.2.7 | Setup·Hold·Pulse Width와 핵심 Utilization만 `core_report.txt`에 저장 | [v1.2.7 릴리스](https://github.com/CGM72/resnet20-core-rtl/releases/tag/v1.2.7) · [ZIP](https://github.com/CGM72/resnet20-core-rtl/raw/refs/heads/main/downloads/resnet20-core-rtl-v1.2.7.zip) |
 | 1.2.6 | 타이밍·Utilization 텍스트를 `fpga::report`와 `fpga::analyze core`에서 저장. 전체 모델 SNR·latency는 `fpga::report_sim`으로 분리 | [v1.2.6 릴리스](https://github.com/CGM72/resnet20-core-rtl/releases/tag/v1.2.6) · [ZIP](https://github.com/CGM72/resnet20-core-rtl/raw/refs/heads/main/downloads/resnet20-core-rtl-v1.2.6.zip) |

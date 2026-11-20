@@ -4,14 +4,14 @@ Tcl 명령은 Vivado Tcl Console에서 실행합니다. 기본 테스트와 보�
 
 ## 소스 준비
 
-[GitHub Releases](https://github.com/CGM72/resnet20-core-rtl/releases/tag/v1.2.8)에서 `resnet20-core-rtl-v1.2.8.zip`을 받아 새 폴더에 풉니다.
+[GitHub Releases](https://github.com/CGM72/resnet20-core-rtl/releases/tag/v1.2.9)에서 `resnet20-core-rtl-v1.2.9.zip`을 받아 새 폴더에 풉니다.
 
 ## 실행기 불러오기
 
 Vivado에서 열려 있는 사용자 프로젝트를 저장하고 닫습니다. `C:/path/to`를 ZIP을 푼 위치로 바꿉니다. 다른 버전이라면 압축을 풀어 생성된 폴더 이름을 사용합니다.
 
 ```tcl
-source {C:/path/to/resnet20-core-rtl-v1.2.8/scripts/vivado.tcl}
+source {C:/path/to/resnet20-core-rtl-v1.2.9/scripts/vivado.tcl}
 ```
 
 Vivado를 다시 시작하거나 실행기 파일을 교체했으면 `source`를 다시 실행합니다.
@@ -67,7 +67,6 @@ fpga::report
 `fpga::analyze core`는 분석 프로젝트를 열어 두며, `fpga::report`는 작업 후 자동으로 닫습니다.
 분석 클럭 제약을 지정하려면 `fpga::report 20.0`을 실행합니다. 이 흐름에는 Python이 필요 없습니다.
 브라우저에서 `reports/core_report.html`을 열면 Vivado 화면과 비슷하게 Setup·Hold·Pulse Width가 나란히 표시됩니다. Utilization 표에는 사용량과 가용량을 표시합니다.
-`reports/core_report.txt`는 버전 비교용으로 함께 저장합니다.
 텍스트에는 Setup·Hold·Pulse Width의 slack, 위반 endpoint와 상태, 그리고 LUT·FF·BRAM·DSP의 사용량과 사용률을 저장합니다.
 Vivado 원본은 해당 `build/analysis/core/run_*/` 아래에 있습니다.
 
@@ -82,24 +81,6 @@ fpga::report_sim
 결과는 `reports/snr_latency.txt`에 저장됩니다. 같은 조건의 완료된 시뮬레이션은 재사용합니다.
 PATH에서 Verilator를 찾으면 사용하고, 없으면 XSim으로 실행합니다. Verilator 빌드 도구 없이 실행하려면 `fpga::report_sim {} xsim`으로 XSim을 지정합니다.
 Python을 직접 지정하려면 `fpga::report_sim {C:/path/to/python.exe}`를 실행합니다.
-
-## 버전별 보고서 비교
-
-비교할 버전에서 각각 `fpga::report`를 실행합니다. 1.2.5부터는 `reports/generated/v<버전>/core_report.txt`에도 결과를 저장합니다.
-이 폴더를 한 저장소의 `reports/generated/` 아래에 모은 뒤 최신 실행기를 불러와 실행합니다.
-
-```tcl
-fpga::compare
-```
-
-별도 폴더에 풀어둔 버전은 각 보고서의 경로를 직접 넘겨도 됩니다.
-
-```tcl
-fpga::compare {C:/projects/resnet20-core-rtl-v1.2.4/reports/core_report.txt} {C:/projects/resnet20-core-rtl-v1.2.8/reports/core_report.txt}
-```
-
-1.2.1~1.2.3의 기존 자료는 `build/analysis/core/run_...` 폴더를 지정합니다. 측정 파일이 없는 항목은 `N/A`로 표시됩니다.
-SNR·latency끼리 비교하려면 두 버전의 `reports/snr_latency.txt` 경로를 직접 넘깁니다. 비교 결과는 `reports/version_comparison.txt`에 저장됩니다.
 
 ## PNG 변환
 

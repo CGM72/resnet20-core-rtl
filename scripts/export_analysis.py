@@ -30,20 +30,6 @@ def numeric(token):
 
 def parse_timing(text):
     """Vivado Design Timing Summary: each endpoint count is one column."""
-    compact = {}
-    for label, prefix, worst_key, total_key in (
-        ("Setup", "setup", "wns_ns", "tns_ns"),
-        ("Hold", "hold", "whs_ns", "ths_ns"),
-        ("Pulse Width", "pulse", "wpws_ns", "tpws_ns"),
-    ):
-        row = re.search(rf"^{label}\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(?:MET|VIOLATED|N/A)[ \t]*$", text, re.M)
-        if row:
-            worst, total, failing, endpoints = map(numeric, row.groups())
-            compact.update({worst_key: worst, total_key: total,
-                            f"{prefix}_failing_endpoints": failing,
-                            f"{prefix}_total_endpoints": endpoints})
-    if len(compact) == 12:
-        return compact
     lines = text.splitlines()
     for index, line in enumerate(lines):
         if not all(name in line for name in ('WNS(ns)', 'TNS(ns)', 'WHS(ns)', 'THS(ns)')):

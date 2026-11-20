@@ -298,12 +298,8 @@ namespace eval fpga {
         puts "Timing report: [file join $directory timing post_route.rpt]"
         puts "Utilization report: [file join $directory utilization post_route.rpt]"
         if {$target eq "core"} {
-            set header [list "Implementation: measured | Vivado [version -short] | [dict get $cfg part] | $clock_period ns"                 "Implementation source: $directory"]
             set timing [timing_metrics [file join $directory timing post_route.rpt]]
             set resources [utilization_metrics [file join $directory utilization post_route.rpt]]
-            write_text_report core_report.txt $header [list \
-                "Timing (post-route)" [compact_timing $timing] \
-                "Utilization (post-route)" [compact_utilization $resources]]
             source [file join $root scripts report_html.tcl]
             write_html_report $cfg $clock_period $directory $timing $resources
         }
@@ -377,14 +373,6 @@ namespace eval fpga {
         return $metrics
     }
 
-    proc compact_timing {metrics} {
-        set summary [format "%-12s %11s %11s %9s %9s %9s" "Check" "Worst(ns)" "Total(ns)" "Failing" "Endpoints" "Status"]
-        dict for {name values} $metrics {
-            append summary "\n" [format "%-12s %11s %11s %9s %9s %9s" $name {*}$values]
-        }
-        return $summary
-    }
-
     proc utilization_metrics {path} {
         set labels [dict create {slice luts} LUT {clb luts} LUT             {slice registers} FF {clb registers} FF             {block ram tile} BRAM {block ram} BRAM dsps DSP dsp48e1 DSP dsp48e2 DSP \
             slice SLICE {lut as logic} LOGIC]
@@ -425,16 +413,6 @@ namespace eval fpga {
         return $values
     }
 
-    proc compact_utilization {values} {
-        set summary {| Resource | Used | Available | Util% |}
-        foreach {key label} {LUT {Slice LUTs} FF {Slice Registers} BRAM {Block RAM Tile} DSP DSPs} {
-            foreach {count capacity percent} [dict get $values $key] {
-                append summary "\n| $label | $count | $capacity | $percent |"
-            }
-        }
-        return $summary
-    }
-
     proc write_text_report {name header sections} {
         variable root
         set version_file [open [file join $root VERSION] r]
@@ -442,7 +420,6 @@ namespace eval fpga {
         close $version_file
         if {![regexp {^[0-9]+\.[0-9]+\.[0-9]+$} $release_version]} {error "Invalid VERSION"}
         set output [file join $root reports $name]
-        set version_report [file join $root reports generated "v$release_version" $name]
         file mkdir [file dirname $output]
         set temporary [file join [file dirname $output] ".core-report-[pid]-[clock clicks].tmp"]
         set fd [open $temporary {WRONLY CREAT EXCL}]
@@ -462,17 +439,14 @@ namespace eval fpga {
         if {$failed || $close_failed} {file delete -force $temporary}
         if {$failed} {return -options $options $result}
         if {$close_failed} {return -options $close_options $close_result}
-        file mkdir [file dirname $version_report]
-        file copy -force $output $version_report
         puts "Core report: $output"
-        puts "Version report: $version_report"
         return $output
     }
 
     proc report {{clock_period ""}} {
         variable root
         measure_and_finish analyze core $clock_period
-        return [file join $root reports core_report.txt]
+        return [file join $root reports core_report.html]
     }
 
     proc report_sim {{python_exe ""} {simulator auto}} {
@@ -553,14 +527,6 @@ namespace eval fpga {
         return [write_text_report snr_latency.txt $header [list \
             "SNR (dB)" [read_text_file [file join $snr_dir snr.txt]] \
             "Latency (cycles)" [read_text_file [file join $snr_dir latency.txt]]]]
-    }
-
-    proc compare {args} {
-        variable root
-        set python [python_command]
-        set output [exec {*}$python -E [file join $root scripts compare_reports.py]             --reports-dir [file join $root reports] -- {*}$args]
-        puts "Version comparison: $output"
-        return $output
     }
 
     # Optional PNG conversion, separate from native Vivado measurement.
