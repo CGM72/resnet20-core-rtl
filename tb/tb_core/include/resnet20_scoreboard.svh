@@ -119,25 +119,30 @@
         $fclose(fd);
     endtask
 
+    task automatic dump_logits;
+        int fd;
+        fd = $fopen({snr_dir, "/logits_actual.hex"}, "w");
+        if (!fd) $fatal(1, "Cannot write logits_actual.hex in %s", snr_dir);
+        for (int i = 0; i < LOGIT_COUNT; i++)
+            $fdisplay(fd, "%04h", feature[i]);
+        $fclose(fd);
+        $fdisplay(snr_summary, "%0d %0d", LOGIT_COUNT, OUTPUT_FRAC_BITS);
+    endtask
+
     task automatic check_logit_snr;
         localparam real MIN_SNR_DB = 50.0;
         localparam real OUTPUT_SCALE = 2.0 ** OUTPUT_FRAC_BITS;
-        int fd, dump_fd, sample;
+        int fd, sample;
         real reference, error_value, signal_power, error_power, snr_db;
         string extra;
 
         fd = $fopen({vector_dir,"/reference_logits_float.txt"}, "r");
         if (!fd) $fatal(1, "Cannot open float reference logits");
-        if (extract_snr) begin
-            dump_fd = $fopen({snr_dir, "/logits_actual.hex"}, "w");
-            if (!dump_fd) $fatal(1, "Cannot write logits_actual.hex in %s", snr_dir);
-        end
         signal_power = 0.0;
         error_power = 0.0;
         for (int i = 0; i < LOGIT_COUNT; i++) begin
             if ($fscanf(fd, "%f", reference) != 1)
                 $fatal(1, "Missing or invalid float reference logit %0d", i);
-            if (extract_snr) $fdisplay(dump_fd, "%04h", feature[i]);
             sample = int'(feature[i]);
             error_value = reference - ($itor(sample) / OUTPUT_SCALE);
             signal_power += reference * reference;
@@ -145,17 +150,14 @@
         end
         if ($fscanf(fd, "%s", extra) == 1) $fatal(1, "Extra float reference logits");
         $fclose(fd);
-        if (extract_snr) $fclose(dump_fd);
 
         if (signal_power <= 0.0) $fatal(1, "Float reference logits have no signal power");
         if (error_power == 0.0) begin
-            if (extract_snr) $fdisplay(snr_summary, "%0d %0d inf", LOGIT_COUNT, OUTPUT_FRAC_BITS);
             $display("[ PASS ] logit SNR = inf dB (minimum %.2f dB)", MIN_SNR_DB);
         end else begin
             snr_db = 10.0 * $log10(signal_power / error_power);
             if (snr_db < MIN_SNR_DB)
                 $fatal(1, "Logit SNR %.2f dB is below %.2f dB", snr_db, MIN_SNR_DB);
-            if (extract_snr) $fdisplay(snr_summary, "%0d %0d %.17g", LOGIT_COUNT, OUTPUT_FRAC_BITS, snr_db);
             $display("[ PASS ] logit SNR = %.2f dB (minimum %.2f dB)", snr_db, MIN_SNR_DB);
         end
     endtask

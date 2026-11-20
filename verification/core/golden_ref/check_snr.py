@@ -40,11 +40,25 @@ def measure(name, words, reference, frac_bits):
     }
 
 
-def verify(run, vectors, weights):
-    rows = (run / "scoreboard_results.txt").read_text(encoding="ascii").splitlines()
-    if len(rows) != 2 or rows[1] != "complete":
-        raise ValueError("Testbench did not complete successfully")
-    count, frac_bits, tb_snr = rows[0].split()
+def verify(run, vectors, weights, recover_frac_bits=None):
+    summary = run / "scoreboard_results.txt"
+    rows = summary.read_text(encoding="ascii").splitlines()
+    tb_snr = None
+    if recover_frac_bits is not None:
+        if rows:
+            raise ValueError("Recovery requires an empty scoreboard from a legacy SNR failure")
+        count = None
+        frac_bits = recover_frac_bits
+        print("Recovering SNR from RTL dumps. Testbench completion was not recorded.")
+    else:
+        if len(rows) != 2 or rows[1] != "complete":
+            raise ValueError(f"Testbench did not complete successfully: {summary}")
+        fields = rows[0].split()
+        if len(fields) not in (2, 3):
+            raise ValueError(f"Invalid logit metadata: {summary}")
+        count, frac_bits, *legacy_snr = fields
+        if legacy_snr:
+            tb_snr = legacy_snr[0]
     frac_bits = int(frac_bits)
     if not 0 <= frac_bits <= 15:
         raise ValueError(f"Invalid output fractional width: {frac_bits}")
@@ -80,11 +94,16 @@ def verify(run, vectors, weights):
         raise ValueError("Final logits differ from the formatted FC output")
     final = measure("logits", logits, references["fc"], frac_bits)
     snr = float(final["snr_db"])
-    if int(count) != final["samples"] or not math.isclose(snr, float(tb_snr), abs_tol=1e-8):
+    if count is not None and int(count) != final["samples"]:
+        raise ValueError("Testbench and independent final logit counts differ")
+    if tb_snr is not None and not math.isclose(snr, float(tb_snr), abs_tol=1e-8):
         raise ValueError("Testbench and independent final logit SNR differ")
     if snr < 50:
         raise ValueError(f"Final logit SNR {snr:.2f} dB is below 50 dB")
-    final["tb_snr_db"] = float(tb_snr) if math.isfinite(snr) else tb_snr
+    if tb_snr is not None:
+        final["tb_snr_db"] = float(tb_snr) if math.isfinite(snr) else tb_snr
+    if recover_frac_bits is not None:
+        final["recovered_from_incomplete_run"] = True
     report.append(final)
     (run / "results.json").write_text(json.dumps(report, indent=2, allow_nan=False) + "\n",
                                     encoding="utf-8")
@@ -97,5 +116,7 @@ if __name__ == "__main__":
     parser.add_argument("--run", type=Path, default=ROOT / "build/sim/tb_core/snr")
     parser.add_argument("--vectors", type=Path, default=ROOT / "tb/tb_core/vectors")
     parser.add_argument("--weights", type=Path, default=RESNET / "weight.bin")
+    parser.add_argument("--recover-frac-bits", type=int,
+                        help="Recover SNR from legacy dumps after the testbench SNR check failed")
     args = parser.parse_args()
-    verify(args.run, args.vectors, args.weights)
+    verify(args.run, args.vectors, args.weights, args.recover_frac_bits)

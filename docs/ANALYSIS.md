@@ -8,7 +8,7 @@
 Vivado Console과 시뮬레이션 로그에서 `[ PASS ] ALL TESTS PASSED`를 확인합니다.
 실패 시 최초 `$fatal`의 클럭·인덱스·기대값·실제값을 찾아 같은 시점의 파형을 확인합니다.
 독립 TB는 유효 신호와 signed 값을 검사합니다. core 연결 TB는 skip 정렬, 입력 공백, reset과 Pool/GAP 그룹도 확인합니다.
-전체 모델 TB는 22개 연산 레이어의 정수 기준값과 최종 로짓 SNR 50 dB 기준을 확인합니다.
+전체 모델 TB는 22개 연산 레이어의 정수 기준값을 확인합니다. 보고서 실행에서는 Python이 최종 로짓 SNR의 50 dB 기준을 판정합니다.
 입력은 결정적 패턴 1개입니다.
 
 ```text
@@ -42,10 +42,10 @@ latency는 첫 입력을 받는 상승 에지부터 마지막 유효 출력을 �
 | --- | --- |
 | `layer_NN_actual.hex` | 명령 인덱스 `NN`의 RTL 출력. HWC 순서의 signed 16-bit Q5.10 단어 |
 | `logits_actual.hex` | `OUTPUT_FRAC_BITS`로 변환한 최종 로짓 10개 |
-| `scoreboard_results.txt` | TB가 계산한 최종 로짓의 샘플 수, 소수 비트 수, SNR과 정상 완료 표시 |
+| `scoreboard_results.txt` | 최종 로짓 샘플 수, 소수 비트 수, 정상 완료 표시 |
 | `results.json` | Python에서 계산한 레이어별 SNR, 샘플 수, 최대 절대 오차와 최종 로짓 SNR |
 
-Python은 같은 입력과 가중치로 부동소수점 추론을 실행하고, RTL의 레이어 출력을 기존 정수 기준값과 대조합니다. 출력 단어를 `2**frac_bits`로 나눈 다음 `10*log10(sum(ref²)/sum((actual-ref)²))`로 SNR을 계산합니다. 오차 전력이 0이면 JSON에 `"inf"`를 기록합니다. 마지막 블록의 레이어 출력은 GAP 이후의 채널 벡터입니다. 최종 로짓은 기존 50 dB 기준을 적용하고 TB와 Python의 계산값을 대조합니다. 중간 레이어 SNR은 진단용입니다.
+Python은 같은 입력과 가중치로 부동소수점 추론을 실행하고, RTL의 레이어 출력을 기존 정수 기준값과 대조합니다. 출력 단어를 `2**frac_bits`로 나눈 다음 `10*log10(sum(ref²)/sum((actual-ref)²))`로 SNR을 계산합니다. 오차 전력이 0이면 JSON에 `"inf"`를 기록합니다. 마지막 블록의 레이어 출력은 GAP 이후의 채널 벡터입니다. Python은 최종 로짓에 기존 50 dB 기준을 적용합니다. 중간 레이어 SNR은 진단용입니다.
 
 ## 타이밍과 Utilization
 

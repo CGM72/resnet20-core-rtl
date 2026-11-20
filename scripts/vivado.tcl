@@ -155,9 +155,10 @@ namespace eval fpga {
         if {$tb eq "tb_core"} {
             set snr_dir [file join $directory snr]
             file mkdir $snr_dir
-            foreach stale {scoreboard_results.txt results.json latency.txt} {
+            foreach stale {scoreboard_results.txt results.json latency.txt logits_actual.hex} {
                 file delete -force [file join $snr_dir $stale]
             }
+            file delete -force {*}[glob -nocomplain -directory $snr_dir layer_*_actual.hex]
             append options " -testplusarg \"snr_dir=$snr_dir\""
         }
         puts "Design top=[dict get $cfg top]; TB=$tb"

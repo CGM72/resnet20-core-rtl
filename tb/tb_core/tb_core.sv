@@ -149,7 +149,8 @@ module tb_core #(
             $write(" %0d", feature[i]);
         end
         $display("");
-        check_logit_snr();
+        if (extract_snr) dump_logits();
+        else check_logit_snr();
         idle(2);
         if (extract_snr) begin
             $fdisplay(latency_report, "inference %0d %0d %0d", inference_start_cycle,
