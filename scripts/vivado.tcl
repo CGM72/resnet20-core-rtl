@@ -151,7 +151,9 @@ namespace eval fpga {
         if {$tb eq "tb_core"} {
             set snr_dir [file join $directory snr]
             file mkdir $snr_dir
-            file delete -force [file join $snr_dir scoreboard_results.txt] [file join $snr_dir results.json]
+            foreach stale {scoreboard_results.txt results.json latency.txt} {
+                file delete -force [file join $snr_dir $stale]
+            }
             append options " -testplusarg \"snr_dir=$snr_dir\""
         }
         puts "Design top=[dict get $cfg top]; TB=$tb"
@@ -286,6 +288,27 @@ namespace eval fpga {
         set fd [open [file join $base latest.txt] w]; puts $fd $directory; close $fd
         puts "Timing report: [file join $directory timing post_route.rpt]"
         puts "Utilization report: [file join $directory utilization post_route.rpt]"
+        return $directory
+    }
+
+    proc report {{clock_period ""}} {
+        variable root
+        require_closed
+        set python [python_command]
+        set snr_dir [file join $root build sim tb_core snr]
+        sim tb_core "" core
+        set snr [exec {*}$python [file join $root verification core golden_ref check_snr.py] --run $snr_dir]
+        set latency [file join $snr_dir latency.txt]
+        if {![file isfile $latency]} {error "Missing simulation latency report: $latency"}
+        finish
+
+        set directory [analyze core $clock_period]
+        file copy $latency [file join $directory latency.txt]
+        file copy [file join $snr_dir results.json] [file join $directory snr.json]
+        set fd [open [file join $directory snr.txt] w]
+        puts $fd $snr
+        close $fd
+        puts "Timing, utilization, SNR and latency reports: $directory"
         return $directory
     }
 

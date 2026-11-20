@@ -40,7 +40,7 @@ module tb_core #(
     string vector_dir = "vectors";
     string snr_dir;
     bit extract_snr;
-    int snr_summary;
+    int snr_summary, latency_report;
 
     core dut (
         .clk               (clk),
@@ -123,6 +123,11 @@ module tb_core #(
         if (extract_snr) begin
             snr_summary = $fopen({snr_dir, "/scoreboard_results.txt"}, "w");
             if (!snr_summary) $fatal(1, "Cannot open SNR summary in %s", snr_dir);
+            latency_report = $fopen({snr_dir, "/latency.txt"}, "w");
+            if (!latency_report) $fatal(1, "Cannot open latency report in %s", snr_dir);
+            $fdisplay(latency_report, "# Input acceptance to final output sampling (rising edges)");
+            $fdisplay(latency_report, "layer first_input_cycle last_output_cycle latency_cycles");
+            inference_start_cycle = -1;
         end
         weights_consumed = 0;
         $display("[ INFO ] ResNet-20 Q5.10 input_gap=%0d skip_delay=%0d output_frac_bits=%0d",
@@ -147,6 +152,9 @@ module tb_core #(
         check_logit_snr();
         idle(2);
         if (extract_snr) begin
+            $fdisplay(latency_report, "inference %0d %0d %0d", inference_start_cycle,
+                      last_output_cycle, last_output_cycle - inference_start_cycle);
+            $fclose(latency_report);
             $fdisplay(snr_summary, "complete");
             $fclose(snr_summary);
         end

@@ -19,6 +19,21 @@ build/sim/tb_relu/
     *.wdb   파형
 ```
 
+## 1.2.3 통합 보고서
+
+`fpga::report`가 끝나면 `build/analysis/core/run_*/`의 해당 실행 폴더에서 다음 파일을 확인합니다.
+
+| 파일 | 내용 |
+| --- | --- |
+| `timing/post_route.rpt` | 배치·배선 후 Timing Summary |
+| `utilization/post_route.rpt` | 배치·배선 후 Utilization |
+| `snr.txt` · `snr.json` | 레이어 및 최종 로짓의 SNR. JSON에는 샘플 수와 최대 절대 오차도 포함 |
+| `latency.txt` | 레이어별 및 전체 추론의 입력·출력 클럭 번호와 차이 |
+
+latency는 첫 입력을 받는 상승 에지부터 마지막 유효 출력을 읽는 상승 에지까지의 클럭 차이입니다.
+`inference` 행은 stem의 첫 입력부터 FC의 마지막 출력까지이며, 레이어 사이의 테스트벤치 대기 클럭도 포함합니다.
+타이밍과 Utilization은 Vivado 배치·배선 결과이고, SNR과 latency는 전체 모델 RTL 시뮬레이션 결과입니다.
+
 ## 1.2.1 이상 레이어별 SNR
 
 `build/sim/tb_core/snr/`에 다음 파일이 생성됩니다.
@@ -82,7 +97,7 @@ OOC 결과의 판정 범위는 분석 대상과 적용된 제약입니다. 보�
 
 E0은 입력을 수신하는 상승 에지이며 출력은 해당 에지의 레지스터 갱신 직후 기준입니다.
 
-| 항목 | 1.0.0 | 1.1.0 · 1.1.1 · 1.2.1 · 1.2.2 |
+| 항목 | 1.0.0 | 1.1.0~1.2.3 |
 | --- | --- | --- |
 | MAC | 2단계 | 5단계 |
 | GAP | 2단계, 양수 N, 가변 나눗셈 | 4단계, 기본 1·2·4·…·1024, shift |
@@ -250,7 +265,7 @@ Pool/GAP 우회에서 마지막 MAC 항이 L, skip 수신이 S이면:
 빠른 skip/늦은 skip/연속 그룹/입력 공백/reset 중간 취소를 확인합니다.
 Pool/GAP 활성에서는 그룹을 모으므로 입력마다 최종 출력이 생기지 않습니다.
 
-## 1.1.0 · 1.1.1 · 1.2.1 · 1.2.2 모듈별 파형
+## 1.1.0~1.2.3 모듈별 파형
 
 ### MAC: mac.v / mac_accumulate
 
@@ -333,7 +348,7 @@ iteration=0은 입력 폐기, enable=0은 2단계 우회입니다.
 
 ### core.v: 단계 연결과 skip 정렬
 
-1.2.2에서는 core DUT 아래의 `u_conv`에서 MAC 결과와 skip 정렬 신호를 확인합니다.
+1.2.2 이상에서는 core DUT 아래의 `u_conv`에서 MAC 결과와 skip 정렬 신호를 확인합니다.
 MAC 내부 경로는 `/tb_core_stream/dut/u_conv/u_mac/`입니다. 아래 표의 `mac_*`, `skip_*`, `waiting_for_skip`, `pair_valid`는 `u_conv` 내부 신호입니다.
 1.1.0~1.2.1에서는 동일한 신호를 core DUT 바로 아래에서 확인합니다.
 

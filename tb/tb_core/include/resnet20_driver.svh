@@ -85,7 +85,12 @@
         end
         finish_compare();
         check_layer_reference(index);
-        if (extract_snr) dump_layer_output(index);
+        if (extract_snr) begin
+            dump_layer_output(index);
+            if (inference_start_cycle < 0) inference_start_cycle = first_input_cycle;
+            $fdisplay(latency_report, "%s %0d %0d %0d", layer_name[index],
+                      first_input_cycle, last_output_cycle, last_output_cycle - first_input_cycle);
+        end
         // Projection writes the shortcut bank while the main path keeps its input.
         for (int i = 0; i < result_words; i++) begin
             if (layer.op == OP_PROJECTION) shortcut[i] = actual[i];

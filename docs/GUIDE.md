@@ -18,7 +18,7 @@ git switch --detach v1.1.1
 Vivado에서 열려 있는 사용자 프로젝트를 저장하고 닫습니다. `C:/path/to`를 ZIP을 푼 위치로 바꿉니다. 다른 버전이라면 압축을 풀어 생성된 폴더 이름을 사용합니다.
 
 ```tcl
-source {C:/path/to/resnet20-core-rtl-v1.2.2/scripts/vivado.tcl}
+source {C:/path/to/resnet20-core-rtl-v1.2.3/scripts/vivado.tcl}
 ```
 
 Vivado를 다시 시작하거나 실행기 파일을 교체했으면 `source`를 다시 실행합니다.
@@ -61,6 +61,18 @@ add_wave -r /tb_core/dut/*
 ```bash
 python verification/core/golden_ref/check_snr.py
 ```
+
+## 보고서 한 번에 저장
+
+Vivado Tcl Console에서 실행합니다. Python 3.10 이상이 필요합니다.
+
+```tcl
+fpga::report
+```
+
+이 명령은 전체 모델 시뮬레이션과 core 합성·배치·배선을 순서대로 실행합니다. 출력 경로는 콘솔에 표시됩니다.
+배치·배선 목표 주기만 바꾸려면 예를 들어 `fpga::report 20.0`을 실행합니다.
+저장 파일과 latency 기준은 [분석 가이드](ANALYSIS.md#123-통합-보고서)를 참고합니다.
 
 ## PNG 변환
 

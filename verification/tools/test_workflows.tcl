@@ -81,6 +81,32 @@ fpga::synth relu
 fpga::finish
 if {$project ne ""} {error "Finish did not close generated synthesis project"}
 puts "PASS full-model static directory fixture, synth, and safe finish"
+reset_mock
+set report_sim [file join $fpga::root build sim tb_core snr]
+rename exec workflow_stub_exec
+proc exec {args} {
+ if {[file tail [lindex $args 1]] ne "check_snr.py"} {return [workflow_stub_exec {*}$args]}
+ if {[argument $args --run] ne $::report_sim || [lsearch -exact $::actions run] < 0} {
+  error "SNR checker called before simulation or with wrong output directory"
+ }
+ foreach name {latency.txt results.json} {
+  set fd [open [file join $::report_sim $name] w]
+  puts $fd "STUB $name"
+  close $fd
+ }
+ return {STUB SNR}
+}
+set report_dir [fpga::report 20.0]
+foreach path {timing/post_route.rpt utilization/post_route.rpt snr.txt snr.json latency.txt} {
+ if {![file isfile [file join $report_dir $path]]} {error "Missing combined report $path"}
+}
+if {[lsearch -exact $actions close_sim] >= [lsearch -exact $actions synth] ||
+    ![string match {* -period 20.0 *} [lindex $constraint_texts end]]} {
+ error "Report must close simulation before analysis and forward the requested period"
+}
+rename exec {}
+rename workflow_stub_exec exec
+puts "PASS combined core reports"
 # Custom source/config reuse remains supported.
 if {[llength $argv]} {
  set fpga::root [file normalize [lindex $argv 0]]

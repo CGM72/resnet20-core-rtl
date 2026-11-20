@@ -4,11 +4,18 @@
 
 | 버전 | 변경 내역 | 배포 소스 |
 | --- | --- | --- |
+| 1.2.3 | `fpga::report`로 타이밍·Utilization·SNR·latency 보고서를 한 실행 폴더에 저장 | [v1.2.3](https://github.com/CGM72/resnet20-core-rtl/tree/v1.2.3) · [ZIP](https://github.com/CGM72/resnet20-core-rtl/raw/refs/heads/main/downloads/resnet20-core-rtl-v1.2.3.zip) |
 | 1.2.2 | 합성곱 탭 처리와 skip 정렬을 `rtl/compute/conv.v`로 분리 | [v1.2.2](https://github.com/CGM72/resnet20-core-rtl/tree/v1.2.2) · [ZIP](https://github.com/CGM72/resnet20-core-rtl/raw/refs/heads/main/downloads/resnet20-core-rtl-v1.2.2.zip) |
 | 1.2.1 | 전체 모델의 레이어별 RTL 출력 덤프와 Python SNR 추출 추가. 최종 로짓 50 dB 검증 유지. 문서를 다섯 가지 가이드로 개편 | [배포 커밋](https://github.com/CGM72/resnet20-core-rtl/tree/7286fe3115014e6139d166cadbc6cb26c35af6fe) · [ZIP](https://github.com/CGM72/resnet20-core-rtl/raw/refs/heads/main/downloads/resnet20-core-rtl-v1.2.1.zip) |
 | 1.1.1 | 1.1.0 RTL의 가독성 개선과 SoC 문서 보강. 기본 core 논리 동등성 확인 | [v1.1.1](https://github.com/CGM72/resnet20-core-rtl/tree/v1.1.1) · [release/1.1.1](https://github.com/CGM72/resnet20-core-rtl/tree/release/1.1.1) · [ZIP](https://github.com/CGM72/resnet20-core-rtl/raw/refs/heads/main/downloads/resnet20-core-rtl-v1.1.1.zip) |
 | 1.1.0 | MAC 5단계, GAP 4단계 shift 평균, 4-entry skip FIFO 적용. 기본 GAP 크기는 2의 거듭제곱 | [v1.1.0](https://github.com/CGM72/resnet20-core-rtl/tree/v1.1.0) · [release/1.1.0](https://github.com/CGM72/resnet20-core-rtl/tree/release/1.1.0) · [ZIP](https://github.com/CGM72/resnet20-core-rtl/raw/refs/heads/main/downloads/resnet20-core-rtl-v1.1.0.zip) |
 | 1.0.0 | 초기 core와 독립 모듈 테스트벤치, Vivado 분석 흐름. MAC/GAP 2단계와 가변 N 평균 | [v1.0.0](https://github.com/CGM72/resnet20-core-rtl/tree/v1.0.0) · [release/1.0.0](https://github.com/CGM72/resnet20-core-rtl/tree/release/1.0.0) · [ZIP](https://github.com/CGM72/resnet20-core-rtl/raw/refs/heads/main/downloads/resnet20-core-rtl-v1.0.0.zip) |
+
+## 1.2.3 검증
+
+Verilator 전체 모델 시뮬레이션에서 22개 레이어와 전체 추론의 latency를 저장했습니다.
+기본 테스트 조건에서 전체 추론은 40,899,571클럭이며, SNR 보고서는 1.2.2와 일치했습니다.
+Vivado Tcl 보고서 흐름과 경로는 모의 API로 검증했습니다. Vivado 배치·배선 실측은 별도입니다.
 
 ## 1.2.2 검증
 

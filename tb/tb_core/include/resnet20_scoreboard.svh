@@ -7,6 +7,7 @@
     bit scheduled[0:MAX_TENSOR_WORDS-1];
     int queued, received, expected_count, compare_width, compare_channels;
     longint elapsed, deadline;
+    longint cycle, first_input_cycle, last_output_cycle, inference_start_cycle;
     bit comparing;
     bit check_directed;
     string compare_name;
@@ -22,6 +23,7 @@
         queued = 0;
         received = 0;
         elapsed = 0;
+        first_input_cycle = -1;
         deadline = cycle_budget;
         check_directed = directed;
         for (int i = 0; i < count; i++) scheduled[i] = 0;
@@ -41,8 +43,11 @@
     // --------------------------------
     always @(posedge clk) begin : observe_output
         int index, y, x, oc;
+        cycle++;
         if (nrst) begin
             if (comparing) begin
+                if (in_enable && first_input_cycle < 0)
+                    first_input_cycle = cycle;
                 elapsed++;
                 if (elapsed > deadline)
                     $fatal(1, "%s: timeout after %0d cycles (%0d/%0d outputs)",
@@ -64,6 +69,7 @@
                 end
                 actual[index] = out_data;
                 received++;
+                last_output_cycle = cycle;
             end else if (out_enable !== 1'b0) begin
                 $fatal(1, "%s: unknown out_enable", compare_name);
             end
