@@ -299,7 +299,9 @@ namespace eval fpga {
         puts "Utilization report: [file join $directory utilization post_route.rpt]"
         if {$target eq "core"} {
             set header [list "Implementation: measured | Vivado [version -short] | [dict get $cfg part] | $clock_period ns"                 "Implementation source: $directory"]
-            write_text_report core_report.txt $header [list                 "Timing (post-route)" [file join $directory timing post_route.rpt]                 "Utilization (post-route)" [file join $directory utilization post_route.rpt]]
+            write_text_report core_report.txt $header [list \
+                "Timing (post-route)" [compact_timing [file join $directory timing post_route.rpt]] \
+                "Utilization (post-route)" [compact_utilization [file join $directory utilization post_route.rpt]]]
         }
         return $directory
     }
@@ -324,6 +326,96 @@ namespace eval fpga {
         return $result
     }
 
+    proc read_text_file {path} {
+        set fd [open $path r]
+        set failed [catch {read $fd} result options]
+        close $fd
+        if {$failed} {return -options $options $result}
+        return $result
+    }
+
+    proc compact_timing {path} {
+        set summary [format "%-12s %11s %11s %9s %9s %9s" "Check" "Worst(ns)" "Total(ns)" "Failing" "Endpoints" "Status"]
+        set text [read_text_file $path]
+        set header_found 0
+        set values {}
+        foreach line [split $text "\n"] {
+            if {[string match {*WNS(ns)*TNS(ns)*WHS(ns)*THS(ns)*WPWS(ns)*TPWS(ns)*} $line]} {
+                set header_found 1
+                continue
+            }
+            if {!$header_found} {continue}
+            set row [regexp -all -inline {\S+} $line]
+            if {[llength $row] != 12} {continue}
+            set valid 1
+            foreach value $row {
+                if {$value ni {N/A NA - --} && ![string is double -strict $value]} {
+                    set valid 0
+                    break
+                }
+            }
+            if {$valid} {set values $row; break}
+        }
+        if {![llength $values]} {
+            if {![regexp -nocase {no (timing )?(paths|clocks)( were)? (found|defined)} $text]} {
+                error "Cannot find Setup, Hold and Pulse Width summary in $path"
+            }
+            set values [lrepeat 12 N/A]
+        }
+        foreach name {Setup Hold {Pulse Width}} {worst total failing endpoints} $values {
+            set status N/A
+            if {[string is double -strict $worst] && [string is double -strict $total] &&
+                [string is integer -strict $failing] && [string is integer -strict $endpoints] && $endpoints > 0} {
+                set status [expr {$worst < 0 || $total < 0 || $failing > 0 ? "VIOLATED" : "MET"}]
+            }
+            append summary "\n" [format "%-12s %11s %11s %9s %9s %9s" $name $worst $total $failing $endpoints $status]
+        }
+        return $summary
+    }
+
+    proc compact_utilization {path} {
+        set labels [dict create {slice luts} LUT {clb luts} LUT             {slice registers} FF {clb registers} FF             {block ram tile} BRAM {block ram} BRAM dsps DSP dsp48e1 DSP dsp48e2 DSP]
+        set values {}
+        set used_index -1
+        set available_index -1
+        foreach line [split [read_text_file $path] "\n"] {
+            set line [string trim $line]
+            if {![string match {|*} $line]} {continue}
+            set columns {}
+            foreach column [split [string trim $line |] |] {
+                lappend columns [string trim $column]
+            }
+            set lower [string tolower $columns]
+            set used [lsearch -exact $lower used]
+            set available [lsearch -exact $lower available]
+            if {$used >= 0 && $available >= 0} {
+                set used_index $used
+                set available_index $available
+                set percent_index [lsearch -exact $lower util%]
+                if {$percent_index < 0} {set percent_index [lsearch -exact $lower utilization%]}
+                continue
+            }
+            set resource [string trimright [string tolower [lindex $columns 0]] "* "]
+            if {$used_index < 0 || ![dict exists $labels $resource]} {continue}
+            set key [dict get $labels $resource]
+            if {[dict exists $values $key]} {continue}
+            set count [lindex $columns $used_index]
+            set capacity [lindex $columns $available_index]
+            if {$count eq "" || $capacity eq ""} {continue}
+            set percent ""
+            if {$percent_index >= 0} {set percent [lindex $columns $percent_index]}
+            dict set values $key [list $count $capacity $percent]
+        }
+        set summary {| Resource | Used | Available | Util% |}
+        foreach {key label} {LUT {Slice LUTs} FF {Slice Registers} BRAM {Block RAM Tile} DSP DSPs} {
+            if {![dict exists $values $key]} {error "Cannot find $key utilization in $path"}
+            foreach {count capacity percent} [dict get $values $key] {
+                append summary "\n| $label | $count | $capacity | $percent |"
+            }
+        }
+        return $summary
+    }
+
     proc write_text_report {name header sections} {
         variable root
         set version_file [open [file join $root VERSION] r]
@@ -339,12 +431,9 @@ namespace eval fpga {
             puts $fd "ResNet-20 core report"
             puts $fd "Version: $release_version"
             foreach line $header {puts $fd $line}
-            foreach {title path} $sections {
+            foreach {title contents} $sections {
                 puts $fd "\n=== $title ==="
-                set input [open $path r]
-                set copy_failed [catch {fcopy $input $fd} copy_result copy_options]
-                close $input
-                if {$copy_failed} {return -options $copy_options $copy_result}
+                puts $fd [string trimright $contents "\r\n"]
             }
         } result options]
         set close_failed [catch {close $fd} close_result close_options]
@@ -442,7 +531,9 @@ namespace eval fpga {
         }
 
         set header [list "Simulation: $simulation | $simulator | $simulator_version"             "Simulation source: $snr_dir"]
-        return [write_text_report snr_latency.txt $header [list             "SNR (dB)" [file join $snr_dir snr.txt]             "Latency (cycles)" [file join $snr_dir latency.txt]]]
+        return [write_text_report snr_latency.txt $header [list \
+            "SNR (dB)" [read_text_file [file join $snr_dir snr.txt]] \
+            "Latency (cycles)" [read_text_file [file join $snr_dir latency.txt]]]]
     }
 
     proc compare {args} {

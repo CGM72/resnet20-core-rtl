@@ -43,7 +43,24 @@ proc read_verilog {args} {if {![file isfile [lindex $args end]]} {error "Missing
 proc read_xdc {file} {set fd [open $file r];lappend ::constraint_texts [read $fd];close $fd;lappend ::actions clock}
 proc synth_design {args} {set ::last_synth $args;lappend ::actions synth}
 proc report_file {args} {set fd [open [argument $args -file] w];puts $fd {STUB REPORT - NOT MEASURED};close $fd}
-foreach name {report_timing_summary report_timing report_utilization check_timing report_route_status report_drc} {proc $name {args} {report_file {*}$args}}
+foreach name {report_timing check_timing report_route_status report_drc} {proc $name {args} {report_file {*}$args}}
+proc report_timing_summary {args} {
+ set fd [open [argument $args -file] w]
+ puts $fd {WNS(ns) TNS(ns) TNS Failing Endpoints TNS Total Endpoints WHS(ns) THS(ns) THS Failing Endpoints THS Total Endpoints WPWS(ns) TPWS(ns) TPWS Failing Endpoints TPWS Total Endpoints
+2.767 0.000 0 1126 0.124 0.000 0 1126 -0.750 -0.750 1 568
+STUB TIMING DETAILS}
+ close $fd
+}
+proc report_utilization {args} {
+ set fd [open [argument $args -file] w]
+ puts $fd {| Site Type | Used | Fixed | Prohibited | Available | Util% |
+| Slice LUTs | 610 | 0 | 0 | 53200 | 1.15 |
+| Slice Registers | 544 | 0 | 0 | 106400 | 0.51 |
+| Block RAM Tile | 0 | 0 | 0 | 140 | 0.00 |
+| DSPs | 1 | 0 | 0 | 220 | 0.45 |
+| F7 Muxes | 0 | 0 | 0 | 26600 | 0.00 |}
+ close $fd
+}
 foreach name {write_checkpoint write_verilog} {proc $name {args} {set fd [open [lindex $args end] w];puts $fd {STUB DESIGN};close $fd}}
 proc opt_design {} {lappend ::actions opt}
 proc place_design {} {lappend ::actions place}
@@ -127,10 +144,10 @@ reset_mock
 set report_path [fpga::report 20.0]
 if {$report_path ne [file join $fpga::root reports core_report.txt]} {error "Wrong text report destination"}
 set fd [open $report_path r];set report_text [read $fd];close $fd
-foreach section {{Timing (post-route)} {Utilization (post-route)}} {
+foreach section {{Timing (post-route)} Setup Hold {Pulse Width} VIOLATED {Utilization (post-route)} {Slice LUTs} DSPs} {
  if {[string first $section $report_text] < 0} {error "Missing implementation report section $section"}
 }
-if {"simulate" in $actions || $exec_count || $project ne "" || [string match {*SNR (dB)*} $report_text]} {
+if {"simulate" in $actions || $exec_count || $project ne "" || [regexp {SNR|STUB TIMING DETAILS|F7 Muxes} $report_text]} {
  error "Implementation report must skip simulation, Python and SNR"
 }
 if {![string match {* -period 20.0 *} [lindex $constraint_texts end]]} {error "Report did not forward period"}

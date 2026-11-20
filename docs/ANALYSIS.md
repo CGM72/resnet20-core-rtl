@@ -21,11 +21,17 @@ build/sim/tb_relu/
 
 ## 1.2.5 버전 비교
 
-`fpga::compare`는 버전별 텍스트에서 WNS·TNS·WHS·THS, LUT·FF·BRAM·DSP, 최종 로짓 SNR, 전체 추론 클럭 수를 읽습니다.
+`fpga::compare`는 버전별 텍스트에서 WNS·TNS·WHS·THS·WPWS·TPWS, LUT·FF·BRAM·DSP, 최종 로짓 SNR, 전체 추론 클럭 수를 읽습니다.
 Vivado 버전, FPGA part 또는 분석 클럭이 다르면 비교표 아래에 표시합니다. SNR과 latency는 같은 모델·입력·테스트벤치 스케줄의 결과끼리 비교합니다.
 원본 보고서 경로는 비교표에 기록됩니다.
 
-## 1.2.6 보고서 분리
+## 1.2.7 요약 보고서
+
+`reports/core_report.txt`에는 Setup·Hold·Pulse Width 각 한 행과 LUT·FF·BRAM·DSP Utilization 네 행이 포함됩니다.
+`Worst(ns)`와 `Total(ns)`는 Vivado의 worst slack과 total negative slack이고, `Failing`과 `Endpoints`는 위반 및 전체 endpoint 수입니다.
+원본 타이밍 경로와 상세 자원 리포트는 `build/analysis/core/run_*/`에서 확인합니다.
+
+## 1.2.6 이상 보고서 분리
 
 `fpga::report`와 `fpga::analyze core`는 배치·배선 후 타이밍과 Utilization을 `reports/core_report.txt`에 저장합니다.
 `fpga::report_sim`은 전체 모델 시뮬레이션의 SNR과 latency를 `reports/snr_latency.txt`에 저장합니다.

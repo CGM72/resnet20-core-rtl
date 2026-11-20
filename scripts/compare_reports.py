@@ -65,7 +65,7 @@ def load(path):
         raise ReportError("Invalid final logit SNR or full-inference latency")
     if inference and int(inference[2]) - int(inference[1]) != int(inference[3]):
         raise ReportError("Inconsistent full-inference latency")
-    timing_fields = tuple(timing_values.get(key) for key in ("wns_ns", "tns_ns", "whs_ns", "ths_ns"))
+    timing_fields = tuple(timing_values.get(key) for key in ("wns_ns", "tns_ns", "whs_ns", "ths_ns", "wpws_ns", "tpws_ns"))
     used = tuple(resources.get(key, {}).get("used") for key in ("LUT", "FF", "BRAM", "DSP"))
     return (version, *timing_fields, *used, logits[1] if logits else None,
             inference[3] if inference else None), condition, path
@@ -86,7 +86,7 @@ def main():
         except (KeyError, OSError, ValueError) as error:
             parser.error(f"{path}: {error}")
 
-    headings = ("Version", "WNS ns", "TNS ns", "WHS ns", "THS ns", "LUT", "FF", "BRAM", "DSP",
+    headings = ("Version", "WNS ns", "TNS ns", "WHS ns", "THS ns", "WPWS ns", "TPWS ns", "LUT", "FF", "BRAM", "DSP",
                 "Logit SNR dB", "Latency cycles")
     rows = [headings]
     for values, _, _ in entries:
