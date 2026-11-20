@@ -86,7 +86,7 @@ set report_sim [file join $fpga::root build sim tb_core snr]
 rename exec workflow_stub_exec
 proc exec {args} {
  if {[file tail [lindex $args 1]] ne "check_snr.py"} {return [workflow_stub_exec {*}$args]}
- if {[argument $args --run] ne $::report_sim || [lsearch -exact $::actions run] < 0} {
+ if {[lindex $args 0] ne $::report_python || [argument $args --run] ne $::report_sim || [lsearch -exact $::actions run] < 0} {
   error "SNR checker called before simulation or with wrong output directory"
  }
  foreach name {latency.txt results.json} {
@@ -96,7 +96,8 @@ proc exec {args} {
  }
  return {STUB SNR}
 }
-set report_dir [fpga::report 20.0]
+set report_python {C:/Python Install/python.exe}
+set report_dir [fpga::report 20.0 $report_python]
 foreach path {timing/post_route.rpt utilization/post_route.rpt snr.txt snr.json latency.txt} {
  if {![file isfile [file join $report_dir $path]]} {error "Missing combined report $path"}
 }

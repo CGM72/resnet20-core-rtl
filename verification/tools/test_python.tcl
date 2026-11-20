@@ -55,6 +55,13 @@ if {$had_local} {set saved_local $::env(LOCALAPPDATA)}
 set ::env(LOCALAPPDATA) $temporary
 set command [fpga::python_command]
 if {[file tail [lindex $command 0]] ne "python.exe"} {error "Local install folder fallback failed"}
+set managed [file join $temporary Python pythoncore-3.15-64 python.exe]
+file mkdir [file dirname $managed]
+set fd [open $managed w];close $fd
+file delete [file join $temporary Programs Python Python312 python.exe]
+if {[fpga::python_command] ne [list $managed]} {error "Python Install Manager runtime discovery failed"}
+file delete $managed
+puts "PASS Windows Python Install Manager runtime"
 if {$had_local} {set ::env(LOCALAPPDATA) $saved_local} else {unset ::env(LOCALAPPDATA)}
 puts "PASS standard Windows local installation folder"
 foreach mode {none old} {

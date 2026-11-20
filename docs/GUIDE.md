@@ -63,6 +63,13 @@ Vivado Tcl Console에서 실행합니다. Python 3.10 이상이 필요합니다.
 fpga::report
 ```
 
+Python은 PATH, Windows `py` 실행기, 일반 설치 폴더 및 Python Install Manager 설치 폴더에서 자동으로 찾습니다.
+별도 경로를 지정해야 할 때는 아래 예시의 경로를 실제 Python 실행 파일로 바꿉니다. `{}`는 기본 클럭 주기를 사용한다는 뜻입니다.
+
+```tcl
+fpga::report {} {C:/path/to/python.exe}
+```
+
 이 명령은 전체 모델 시뮬레이션과 core 합성·배치·배선을 순서대로 실행합니다. 출력 경로는 콘솔에 표시됩니다.
 배치·배선 목표 주기만 바꾸려면 예를 들어 `fpga::report 20.0`을 실행합니다.
 저장 파일과 latency 기준은 [분석 가이드](ANALYSIS.md#123-통합-보고서)를 참고합니다.

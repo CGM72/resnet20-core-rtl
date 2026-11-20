@@ -49,8 +49,11 @@ namespace eval fpga {
             foreach key {LOCALAPPDATA ProgramFiles ProgramFiles(x86)} {
                 if {![info exists ::env($key)]} {continue}
                 set base $::env($key)
-                if {$key eq "LOCALAPPDATA"} {set base [file join $base Programs Python]}
-                foreach path [lsort -decreasing -dictionary [glob -nocomplain -directory $base Python*/python.exe]] {
+                set patterns {Python*/python.exe}
+                if {$key eq "LOCALAPPDATA"} {
+                    set patterns {Python/pythoncore-*/python.exe Programs/Python/Python*/python.exe}
+                }
+                foreach path [lsort -decreasing -dictionary [glob -nocomplain -types f -directory $base {*}$patterns]] {
                     lappend candidates [list $path]
                 }
             }
@@ -74,7 +77,7 @@ namespace eval fpga {
                 return $command
             }
         }
-        error {Python 3.10+ was not found. Set python {C:/.../python.exe} in project.tcl, or pass the executable path as the second argument to fpga::images. Install Python if no interpreter is installed.}
+        error {Python 3.10+ was not found. Pass its executable path to fpga::report {} {C:/.../python.exe} or fpga::images <target> {C:/.../python.exe}, or set python in project.tcl.}
     }
 
     proc require_closed {} {
@@ -291,10 +294,10 @@ namespace eval fpga {
         return $directory
     }
 
-    proc report {{clock_period ""}} {
+    proc report {{clock_period ""} {python_exe ""}} {
         variable root
         require_closed
-        set python [python_command]
+        set python [python_command $python_exe]
         set snr_dir [file join $root build sim tb_core snr]
         sim tb_core "" core
         set snr [exec {*}$python [file join $root verification core golden_ref check_snr.py] --run $snr_dir]
