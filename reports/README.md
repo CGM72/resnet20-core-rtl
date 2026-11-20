@@ -1,6 +1,14 @@
 # 버전별 Vivado 리포트
 
-현재 버전에서 타이밍·Utilization은 `core_report.html`에 저장합니다. SNR·latency는 별도 시뮬레이션으로 저장합니다. [실행 가이드](../docs/GUIDE.md#타이밍utilization-보고서-저장)
+## 목차
+
+- [1.0.x·1.1.x 캡처 자료](#10x11x-캡처-자료)
+- [Timing 비교](#timing-비교)
+- [자원 비교: 단독 top 기준](#자원-비교-단독-top-기준)
+- [판정과 비교 범위](#판정과-비교-범위)
+- [자료 출처](#자료-출처)
+
+현재 버전에서 타이밍·Utilization은 `core_report.html`에 저장합니다. SNR·latency는 별도 시뮬레이션으로 저장합니다. [실행 가이드](../docs/GUIDE.md#타이밍utilization-보고서)
 
 ## 1.0.x·1.1.x 캡처 자료
 

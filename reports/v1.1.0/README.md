@@ -1,5 +1,12 @@
 # 1.1.0 배치·배선 후 리포트
 
+## 목차
+
+- [Timing](#timing)
+- [단독 top 자원](#단독-top-자원)
+- [core 내부 계층 자원](#core-내부-계층-자원)
+- [원본 이미지](#원본-이미지)
+
 [전체 버전 비교](../README.md) · [waveform 가이드](../../docs/ANALYSIS.md)
 
 사용자 제공 이미지 기준, 10ns(100MHz), 모듈 OOC post_route 결과입니다. 6개 분석 top 모두 표시된 Setup/Hold/Pulse Width 위반이 없습니다.

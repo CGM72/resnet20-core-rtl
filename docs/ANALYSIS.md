@@ -1,7 +1,27 @@
 # 분석 가이드
 
+## 목차
+
+- [결과 파일 찾기](#결과-파일-찾기)
+- [기능 테스트](#기능-테스트)
+- [타이밍과 Utilization](#타이밍과-utilization)
+- [SNR과 latency](#snr과-latency)
+- [파형 공통 기준](#파형-공통-기준)
+- [1.0.0 모듈별 파형](#100-모듈별-파형)
+- [1.1.0 이상 모듈별 파형](#110-이상-모듈별-파형)
+- [1.2.3 보고서 저장 위치](#123-보고서-저장-위치)
+
 [실행 가이드](GUIDE.md)에서 Tcl 명령을 실행한 뒤 결과를 아래 순서로 확인합니다.
 먼저 `VERSION`을 확인해 파형의 신호와 지연 기준을 선택합니다.
+
+## 결과 파일 찾기
+
+| 필요한 결과 | 저장 위치 |
+| --- | --- |
+| Setup·Hold·Pulse Width와 자원 요약 | `reports/core_report.html` |
+| Vivado 원본 타이밍·Utilization | `build/analysis/core/latest.txt`가 가리키는 실행 폴더 |
+| 레이어별 SNR·latency와 전체 모델 결과 | `reports/snr_latency.txt` |
+| 기능 테스트 로그와 파형 | `build/sim/<테스트벤치>/` |
 
 ## 기능 테스트
 
@@ -18,40 +38,6 @@ build/sim/tb_relu/
     *.log   compile/elaboration/simulation 로그
     *.wdb   파형
 ```
-
-## 1.2.9 보고서 저장 위치
-
-`fpga::report`와 `fpga::analyze core`는 배치·배선 후 Setup·Hold·Pulse Width와 Utilization을 `reports/core_report.html`에 저장합니다. 브라우저에서 바로 열 수 있습니다.
-타이밍 경로와 세부 자원 사용량은 `build/analysis/core/run_*/` 아래의 Vivado 원본에서 확인합니다.
-`fpga::report_sim`은 전체 모델 SNR과 latency를 `reports/snr_latency.txt`에 저장합니다. [실행 가이드](GUIDE.md)
-
-## 1.2.3 통합 보고서
-
-`fpga::report`가 끝나면 `build/analysis/core/run_*/`의 해당 실행 폴더에서 다음 파일을 확인합니다.
-
-| 파일 | 내용 |
-| --- | --- |
-| `timing/post_route.rpt` | 배치·배선 후 Timing Summary |
-| `utilization/post_route.rpt` | 배치·배선 후 Utilization |
-| `snr.txt` · `snr.json` | 레이어 및 최종 로짓의 SNR. JSON에는 샘플 수와 최대 절대 오차도 포함 |
-| `latency.txt` | 레이어별 및 전체 추론의 입력·출력 클럭 번호와 차이 |
-
-latency는 첫 입력을 받는 상승 에지부터 마지막 유효 출력을 읽는 상승 에지까지의 클럭 차이입니다.
-`inference` 행은 stem의 첫 입력부터 FC의 마지막 출력까지이며, 레이어 사이의 테스트벤치 대기 클럭도 포함합니다.
-타이밍과 Utilization은 Vivado 배치·배선 결과이고, SNR과 latency는 전체 모델 RTL 시뮬레이션 결과입니다.
-
-## 1.2.1 이상 레이어별 SNR
-
-`build/sim/tb_core/snr/`에 다음 파일이 생성됩니다.
-
-| 파일 | 내용 |
-| --- | --- |
-| `layer_NN_actual.hex` | 명령 인덱스 `NN`의 RTL 출력. HWC 순서의 signed 16-bit Q5.10 단어 |
-| `logits_actual.hex` | `OUTPUT_FRAC_BITS`로 변환한 최종 로짓 10개 |
-| `scoreboard_results.txt` | 최종 로짓 샘플 수, 소수 비트 수, 정상 완료 표시 |
-| `results.json` | Python에서 계산한 레이어별 SNR, 샘플 수, 최대 절대 오차와 최종 로짓 SNR |
-
-Python은 같은 입력과 가중치로 부동소수점 추론을 실행하고, RTL의 레이어 출력을 기존 정수 기준값과 대조합니다. 출력 단어를 `2**frac_bits`로 나눈 다음 `10*log10(sum(ref²)/sum((actual-ref)²))`로 SNR을 계산합니다. 오차 전력이 0이면 JSON에 `"inf"`를 기록합니다. 마지막 블록의 레이어 출력은 GAP 이후의 채널 벡터입니다. Python은 최종 로짓에 기존 50 dB 기준을 적용합니다. 중간 레이어 SNR은 진단용입니다.
 
 ## 타이밍과 Utilization
 
@@ -99,11 +85,29 @@ OOC 결과의 판정 범위는 분석 대상과 적용된 제약입니다. 보�
 
 [버전별 100 MHz 실측 이미지와 비교표](../reports/README.md)
 
+## SNR과 latency
+
+`fpga::report_sim`으로 측정한 latency는 첫 입력을 받는 상승 에지부터 마지막 유효 출력을 읽는 상승 에지까지의 클럭 차이입니다.
+`inference` 행은 stem의 첫 입력부터 FC의 마지막 출력까지이며, 레이어 사이의 테스트벤치 대기 클럭도 포함합니다.
+
+### RTL 출력과 SNR 추출
+
+`fpga::sim tb_core`의 RTL 덤프는 `build/sim/tb_core/snr/`에 있습니다. `fpga::report_sim`의 덤프 경로는 보고서의 `Simulation source`에서 확인합니다.
+
+| 파일 | 내용 |
+| --- | --- |
+| `layer_NN_actual.hex` | 명령 인덱스 `NN`의 RTL 출력. HWC 순서의 signed 16-bit Q5.10 단어 |
+| `logits_actual.hex` | `OUTPUT_FRAC_BITS`로 변환한 최종 로짓 10개 |
+| `scoreboard_results.txt` | 최종 로짓 샘플 수, 소수 비트 수, 정상 완료 표시 |
+| `results.json` | Python에서 계산한 레이어별 SNR, 샘플 수, 최대 절대 오차와 최종 로짓 SNR |
+
+Python은 같은 입력과 가중치로 부동소수점 추론을 실행하고, RTL의 레이어 출력을 기존 정수 기준값과 대조합니다. 출력 단어를 `2**frac_bits`로 나눈 다음 `10*log10(sum(ref²)/sum((actual-ref)²))`로 SNR을 계산합니다. 오차 전력이 0이면 JSON에 `"inf"`를 기록합니다. 마지막 블록의 레이어 출력은 GAP 이후의 채널 벡터입니다. Python은 최종 로짓에 기존 50 dB 기준을 적용합니다. 중간 레이어 SNR은 진단용입니다.
+
 ## 파형 공통 기준
 
 E0은 입력을 수신하는 상승 에지이며 출력은 해당 에지의 레지스터 갱신 직후 기준입니다.
 
-| 항목 | 1.0.0 | 1.1.0~1.2.3 |
+| 항목 | 1.0.0 | 1.1.0 이상 |
 | --- | --- | --- |
 | MAC | 2단계 | 5단계 |
 | GAP | 2단계, 양수 N, 가변 나눗셈 | 4단계, 기본 1·2·4·…·1024, shift |
@@ -271,7 +275,7 @@ Pool/GAP 우회에서 마지막 MAC 항이 L, skip 수신이 S이면:
 빠른 skip/늦은 skip/연속 그룹/입력 공백/reset 중간 취소를 확인합니다.
 Pool/GAP 활성에서는 그룹을 모으므로 입력마다 최종 출력이 생기지 않습니다.
 
-## 1.1.0~1.2.3 모듈별 파형
+## 1.1.0 이상 모듈별 파형
 
 ### MAC: mac.v / mac_accumulate
 
@@ -430,3 +434,14 @@ Pool/GAP를 활성화하면 각각의 반복값만큼 결과가 모이므로 입
 
 Behavioral waveform은 기능과 클럭별 정렬을 확인합니다.
 100MHz의 실제 setup/hold 충족 여부는 배치배선 후 Timing Report로 별도 확인합니다.
+
+## 1.2.3 보고서 저장 위치
+
+1.2.3에서 생성한 통합 보고서는 `build/analysis/core/run_*/` 아래에 있습니다.
+
+| 파일 | 내용 |
+| --- | --- |
+| `timing/post_route.rpt` | 배치·배선 후 Timing Summary |
+| `utilization/post_route.rpt` | 배치·배선 후 Utilization |
+| `snr.txt` · `snr.json` | 레이어 및 최종 로짓의 SNR. JSON에는 샘플 수와 최대 절대 오차도 포함 |
+| `latency.txt` | 레이어별 및 전체 추론의 입력·출력 클럭 번호와 차이 |

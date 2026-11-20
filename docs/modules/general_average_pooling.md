@@ -1,5 +1,14 @@
 # general_average_pooling.v 선언 사전 — 1.1.1
 
+## 목차
+
+- [모듈 `general_average_pooling`](#모듈-general_average_pooling)
+  - [설정 파라미터](#설정-파라미터)
+  - [입출력 포트](#입출력-포트)
+  - [내부 폭·상수](#내부-폭상수)
+  - [내부 데이터·상태·연결 신호](#내부-데이터상태연결-신호)
+- [코드와 파형을 따라 읽는 예](#코드와-파형을-따라-읽는-예)
+
 [모듈 목록·읽는 법](README.md) · [실제 RTL](../../rtl/compute/general_average_pooling.v) · [파형 확인](../ANALYSIS.md)
 
 같은 채널의 N개 공간 값을 합산해 반올림 평균 하나를 만든다. 입출력 Q scale은 같다.

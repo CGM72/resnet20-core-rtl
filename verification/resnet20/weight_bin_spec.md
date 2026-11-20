@@ -1,5 +1,11 @@
 # ResNet-20 `weight.bin` 사양
 
+## 목차
+
+- [파일 구성](#파일-구성)
+- [추론 수치 규칙](#추론-수치-규칙)
+- [재현 및 검증](#재현-및-검증)
+
 대상 모델은 CIFAR-10 입력 `N×3×32×32`를 받아 10개 로짓을 내는 `chenyaofo/pytorch-cifar-models`의 ResNet-20이다. `layer2.0`과 `layer3.0`은 stride 2의 `1×1` projection shortcut을 쓴다. Conv 21개에 추론용 BatchNorm을 접고 FC 1개를 그대로 내보낸다. [모델 소스](https://github.com/chenyaofo/pytorch-cifar-models/blob/master/pytorch_cifar_models/resnet.py) · [사전 학습 체크포인트](https://github.com/chenyaofo/pytorch-cifar-models/releases/download/resnet/cifar10_resnet20-4118986f.pt)
 
 ## 파일 구성

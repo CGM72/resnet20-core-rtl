@@ -1,8 +1,18 @@
 # 사용 SoC와 통합 전제
 
+## 목차
+
+- [대상 보드와 Vivado 설정](#대상-보드와-vivado-설정)
+- [PS와 PL의 통합 범위](#ps와-pl의-통합-범위)
+- [버전별 전제](#버전별-전제)
+- [제약과 실제 보드 연결](#제약과-실제-보드-연결)
+- [다른 SoC에 사용할 때](#다른-soc에-사용할-때)
+
 **SoC(System on Chip)**는 CPU와 주변장치 등을 한 칩에 통합한 구성입니다.
 이 프로젝트의 Zynq-7000은 ARM CPU 영역인 **PS(Processing System)**와 FPGA 회로 영역인 **PL(Programmable Logic)**을 한 칩에 포함합니다.
 ZedBoard는 이 SoC를 탑재한 개발 보드이며, core RTL은 PL에 구현하는 연산 회로입니다.
+
+## 대상 보드와 Vivado 설정
 
 | 항목 | 모든 제공 버전의 기본 전제 |
 |---|---|
@@ -15,6 +25,8 @@ ZedBoard는 이 SoC를 탑재한 개발 보드이며, core RTL은 PL에 구현�
 | 분석 목표 클럭 | clk 포트 10ns, 100MHz |
 | 기본 수치 | signed INT16, Q5.10, 단일 lane MAC |
 | reset / 데이터 수신 | nrst 비동기 active-low, in_enable=1인 상승 에지 수신 |
+
+## PS와 PL의 통합 범위
 
 현재 제공 범위는 core와 연산 모듈, 기능 TB, 모듈 OOC 분석입니다.
 PS 설정·AXI/DMA·메모리/주소 제어·레이어 실행 순서는 시스템 통합자가 구성합니다.

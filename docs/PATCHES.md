@@ -1,5 +1,19 @@
 # 버전별 패치 내역
 
+## 목차
+
+- [배포 기준](#배포-기준)
+- [배포 내역](#배포-내역)
+- [1.2.3 검증](#123-검증)
+- [1.2.2 검증](#122-검증)
+- [1.2.1 검증](#121-검증)
+- [1.1.1 가독성 패치와 동등성 검증](#111-가독성-패치와-동등성-검증)
+  - [버전과 배포 파일](#버전과-배포-파일)
+  - [유지한 동작과 성능 특성](#유지한-동작과-성능-특성)
+  - [수행한 검증](#수행한-검증)
+  - [검증 명령](#검증-명령)
+  - [Timing/Utilization 자료 구분](#timingutilization-자료-구분)
+
 버전별 다운로드는 [GitHub Releases](https://github.com/CGM72/resnet20-core-rtl/releases)에서 제공합니다. 각 릴리스의 다운로드 링크를 선택하면 해당 버전의 소스와 정리된 문서를 함께 받을 수 있습니다.
 
 ## 배포 기준
@@ -12,6 +26,7 @@
 
 | 버전 | 변경 내역 | 배포 소스 |
 | --- | --- | --- |
+| 1.3.0 | 실행·분석 가이드 재구성, 전체 Markdown 문서에 목차 추가, `fpga::report` 저장 후 프로젝트 유지 | [v1.3.0 릴리스](https://github.com/CGM72/resnet20-core-rtl/releases/tag/v1.3.0) · [ZIP](https://github.com/CGM72/resnet20-core-rtl/raw/refs/heads/main/downloads/resnet20-core-rtl-v1.3.0.zip) |
 | 1.2.9 | 타이밍·Utilization은 HTML 하나로 저장하고 비교용 텍스트와 비교 명령 제거 | [v1.2.9 릴리스](https://github.com/CGM72/resnet20-core-rtl/releases/tag/v1.2.9) · [ZIP](https://github.com/CGM72/resnet20-core-rtl/raw/refs/heads/main/downloads/resnet20-core-rtl-v1.2.9.zip) |
 | 1.2.8 | Vivado 화면과 비슷한 레이아웃의 `core_report.html` 추가 | [v1.2.8 릴리스](https://github.com/CGM72/resnet20-core-rtl/releases/tag/v1.2.8) · [ZIP](https://github.com/CGM72/resnet20-core-rtl/raw/refs/heads/main/downloads/resnet20-core-rtl-v1.2.8.zip) |
 | 1.2.7 | Setup·Hold·Pulse Width와 핵심 Utilization만 `core_report.txt`에 저장 | [v1.2.7 릴리스](https://github.com/CGM72/resnet20-core-rtl/releases/tag/v1.2.7) · [ZIP](https://github.com/CGM72/resnet20-core-rtl/raw/refs/heads/main/downloads/resnet20-core-rtl-v1.2.7.zip) |
