@@ -1,15 +1,15 @@
 # 버전별 패치 내역
 
-버전별 다운로드는 [GitHub Releases](https://github.com/CGM72/resnet20-core-rtl/releases)에서 제공합니다. 각 릴리스의 Assets에서 버전명이 붙은 ZIP을 선택하면 해당 버전의 소스와 정리된 문서를 함께 받을 수 있습니다.
+버전별 다운로드는 [GitHub Releases](https://github.com/CGM72/resnet20-core-rtl/releases)에서 제공합니다. 각 릴리스의 다운로드 링크를 선택하면 해당 버전의 소스와 정리된 문서를 함께 받을 수 있습니다.
 
 | 버전 | 변경 내역 | 배포 소스 |
 | --- | --- | --- |
-| 1.2.3 | `fpga::report`로 타이밍·Utilization·SNR·latency 보고서를 한 실행 폴더에 저장 | [v1.2.3 릴리스](https://github.com/CGM72/resnet20-core-rtl/releases/tag/v1.2.3) · [ZIP](https://github.com/CGM72/resnet20-core-rtl/releases/download/v1.2.3/resnet20-core-rtl-v1.2.3.zip) |
-| 1.2.2 | 합성곱 탭 처리와 skip 정렬을 `rtl/compute/conv.v`로 분리 | [v1.2.2 릴리스](https://github.com/CGM72/resnet20-core-rtl/releases/tag/v1.2.2) · [ZIP](https://github.com/CGM72/resnet20-core-rtl/releases/download/v1.2.2/resnet20-core-rtl-v1.2.2.zip) |
-| 1.2.1 | 전체 모델의 레이어별 RTL 출력 덤프와 Python SNR 추출 추가. 최종 로짓 50 dB 검증 유지. 문서를 다섯 가지 가이드로 개편 | [v1.2.1 릴리스](https://github.com/CGM72/resnet20-core-rtl/releases/tag/v1.2.1) · [ZIP](https://github.com/CGM72/resnet20-core-rtl/releases/download/v1.2.1/resnet20-core-rtl-v1.2.1.zip) |
-| 1.1.1 | 1.1.0 RTL의 가독성 개선과 SoC 문서 보강. 기본 core 논리 동등성 확인 | [v1.1.1 릴리스](https://github.com/CGM72/resnet20-core-rtl/releases/tag/v1.1.1) · [ZIP](https://github.com/CGM72/resnet20-core-rtl/releases/download/v1.1.1/resnet20-core-rtl-v1.1.1.zip) |
-| 1.1.0 | MAC 5단계, GAP 4단계 shift 평균, 4-entry skip FIFO 적용. 기본 GAP 크기는 2의 거듭제곱 | [v1.1.0 릴리스](https://github.com/CGM72/resnet20-core-rtl/releases/tag/v1.1.0) · [ZIP](https://github.com/CGM72/resnet20-core-rtl/releases/download/v1.1.0/resnet20-core-rtl-v1.1.0.zip) |
-| 1.0.0 | 초기 core와 독립 모듈 테스트벤치, Vivado 분석 흐름. MAC/GAP 2단계와 가변 N 평균 | [v1.0.0 릴리스](https://github.com/CGM72/resnet20-core-rtl/releases/tag/v1.0.0) · [ZIP](https://github.com/CGM72/resnet20-core-rtl/releases/download/v1.0.0/resnet20-core-rtl-v1.0.0.zip) |
+| 1.2.3 | `fpga::report`로 타이밍·Utilization·SNR·latency 보고서를 한 실행 폴더에 저장 | [v1.2.3 릴리스](https://github.com/CGM72/resnet20-core-rtl/releases/tag/v1.2.3) · [ZIP](https://github.com/CGM72/resnet20-core-rtl/raw/refs/heads/main/downloads/resnet20-core-rtl-v1.2.3.zip) |
+| 1.2.2 | 합성곱 탭 처리와 skip 정렬을 `rtl/compute/conv.v`로 분리 | [v1.2.2 릴리스](https://github.com/CGM72/resnet20-core-rtl/releases/tag/v1.2.2) · [ZIP](https://github.com/CGM72/resnet20-core-rtl/raw/refs/heads/main/downloads/resnet20-core-rtl-v1.2.2.zip) |
+| 1.2.1 | 전체 모델의 레이어별 RTL 출력 덤프와 Python SNR 추출 추가. 최종 로짓 50 dB 검증 유지. 문서를 다섯 가지 가이드로 개편 | [v1.2.1 릴리스](https://github.com/CGM72/resnet20-core-rtl/releases/tag/v1.2.1) · [ZIP](https://github.com/CGM72/resnet20-core-rtl/raw/refs/heads/main/downloads/resnet20-core-rtl-v1.2.1.zip) |
+| 1.1.1 | 1.1.0 RTL의 가독성 개선과 SoC 문서 보강. 기본 core 논리 동등성 확인 | [v1.1.1 릴리스](https://github.com/CGM72/resnet20-core-rtl/releases/tag/v1.1.1) · [ZIP](https://github.com/CGM72/resnet20-core-rtl/raw/refs/heads/main/downloads/resnet20-core-rtl-v1.1.1.zip) |
+| 1.1.0 | MAC 5단계, GAP 4단계 shift 평균, 4-entry skip FIFO 적용. 기본 GAP 크기는 2의 거듭제곱 | [v1.1.0 릴리스](https://github.com/CGM72/resnet20-core-rtl/releases/tag/v1.1.0) · [ZIP](https://github.com/CGM72/resnet20-core-rtl/raw/refs/heads/main/downloads/resnet20-core-rtl-v1.1.0.zip) |
+| 1.0.0 | 초기 core와 독립 모듈 테스트벤치, Vivado 분석 흐름. MAC/GAP 2단계와 가변 N 평균 | [v1.0.0 릴리스](https://github.com/CGM72/resnet20-core-rtl/releases/tag/v1.0.0) · [ZIP](https://github.com/CGM72/resnet20-core-rtl/raw/refs/heads/main/downloads/resnet20-core-rtl-v1.0.0.zip) |
 
 ## 1.2.3 검증
 

@@ -4,7 +4,7 @@ Tcl 명령은 Vivado Tcl Console에서 실행합니다. 기본 테스트와 보�
 
 ## 소스 준비
 
-[GitHub Releases](https://github.com/CGM72/resnet20-core-rtl/releases/tag/v1.2.3)의 **Assets**에서 `resnet20-core-rtl-v1.2.3.zip`을 받아 새 폴더에 풉니다.
+[GitHub Releases](https://github.com/CGM72/resnet20-core-rtl/releases/tag/v1.2.3)에서 `resnet20-core-rtl-v1.2.3.zip`을 받아 새 폴더에 풉니다.
 
 ## 실행기 불러오기
 
