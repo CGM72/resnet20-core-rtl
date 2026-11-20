@@ -2,6 +2,14 @@
 
 버전별 다운로드는 [GitHub Releases](https://github.com/CGM72/resnet20-core-rtl/releases)에서 제공합니다. 각 릴리스의 다운로드 링크를 선택하면 해당 버전의 소스와 정리된 문서를 함께 받을 수 있습니다.
 
+## 배포 기준
+
+- 문서 정리, 사용성 개선, 호환성 수정은 `main`에 커밋으로 모읍니다.
+- 새 배포가 필요할 때 검증한 변경을 묶어서 `VERSION`, 태그, ZIP, GitHub Release를 함께 갱신합니다. 즉시 배포가 필요한 수정은 별도로 묶을 수 있습니다.
+- 최신 개발 변경은 `main`에서, 배포본은 GitHub Releases에서 확인합니다. 기존 배포 태그는 해당 커밋을 계속 가리킵니다.
+
+## 배포 내역
+
 | 버전 | 변경 내역 | 배포 소스 |
 | --- | --- | --- |
 | 1.2.9 | 타이밍·Utilization은 HTML 하나로 저장하고 비교용 텍스트와 비교 명령 제거 | [v1.2.9 릴리스](https://github.com/CGM72/resnet20-core-rtl/releases/tag/v1.2.9) · [ZIP](https://github.com/CGM72/resnet20-core-rtl/raw/refs/heads/main/downloads/resnet20-core-rtl-v1.2.9.zip) |
