@@ -46,7 +46,7 @@ E0은 입력 수신 상승 에지이며, 출력 시점은 해당 에지의 레�
 
 ## 모듈 `mac_accumulate`
 
-core의 `u_mac`이 사용하는 실제 연산부다. `mac` wrapper의 내부에도 같은 모듈이 있다.
+core의 `u_conv.u_mac`이 사용하는 실제 연산부다. `mac` wrapper의 내부에도 같은 모듈이 있다.
 
 ### 설정 파라미터
 

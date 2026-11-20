@@ -56,7 +56,7 @@ add_wave -r /tb_core/dut/*
 
 모듈별 파형 경로와 결과 판정 기준은 [분석 가이드](ANALYSIS.md)를 따릅니다.
 
-1.2.1의 레이어별 SNR을 내보내려면 전체 모델 테스트 완료 후 저장소 루트에서 Python 3.10 이상으로 실행합니다.
+1.2.1 이상의 레이어별 SNR을 내보내려면 전체 모델 테스트 완료 후 저장소 루트에서 Python 3.10 이상으로 실행합니다.
 
 ```bash
 python verification/core/golden_ref/check_snr.py

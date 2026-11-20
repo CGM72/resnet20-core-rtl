@@ -1,18 +1,21 @@
-# ResNet-20 core 1.2.1
+# ResNet-20 core 1.2.2
 
 [선언된 변수의 역할](modules/README.md)
 
 [사용 SoC](SOC.md) · [1.1.1 패치 검증](PATCH_1.1.1.md)
 
-1.1.1은 1.1.0의 신호명·논리·레지스터를 유지합니다. 이 문서는 제공된 core의 규약입니다. 공통 실행기의 사용과 다른 모듈 교체는 [가이드](GUIDE.md)를 보십시오.
+1.2.2에서는 합성곱 탭 처리와 skip 정렬을 `conv.v`가 담당합니다. `core.v`는 `conv`부터 GAP까지의 모듈을 연결합니다. 공통 실행기의 사용과 다른 모듈 교체는 [가이드](GUIDE.md)를 보십시오.
 
 ```mermaid
 flowchart LR
-    IN[입력 stream] --> SPLIT[MAC 항 / skip 분리]
+    IN[입력 stream] --> SPLIT
+    subgraph CONV[conv.v]
+    SPLIT[MAC 항 / skip 분리]
     SPLIT --> M[mac.v / mac_accumulate]
     SPLIT --> S[4-entry skip FIFO]
     M --> A[MAC/skip 시간 정렬]
     S --> A
+    end
     A --> R[residual.v]
     R --> L[relu.v]
     L --> P[pooling.v]
@@ -25,7 +28,8 @@ flowchart LR
 | 파일 | 기능 |
 |---|---|
 | project.tcl | FPGA part, 분석 클럭, RTL 소스, 모듈별 target 설정 |
-| rtl/compute/core.v | 연산 모듈 연결과 MAC/skip 정렬 |
+| rtl/compute/core.v | 합성곱, Residual, ReLU, MaxPool, GAP 연결 |
+| rtl/compute/conv.v | 합성곱 탭을 bias MAC에 전달하고 결과를 skip과 정렬 |
 | rtl/compute/mac.v | mac wrapper와 mac_accumulate: 곱셈 → 누산 → 절댓값 → 반올림 → 포화/부호 복원 |
 | rtl/compute/residual.v | main+skip 합과 `saturate()` |
 | rtl/compute/relu.v | 음수 제거 / 우회 |
@@ -35,12 +39,12 @@ flowchart LR
 | tb/common/ | 공통 테스트벤치 코드와 사전 계산 기준값 |
 | scripts/vivado.tcl | 시뮬레이션·합성·분석 실행기 |
 
-기본 target은 위의 연산 RTL 6개 파일에서 필요한 소스를 선택합니다. 원본 AXI·controller RTL은 별도 통합 대상입니다.
+기본 target은 위의 연산 RTL 파일에서 필요한 소스를 선택합니다. 원본 AXI·controller RTL은 별도 통합 대상입니다.
 
 기본 단일 lane·INT16·Q5.10, MAC 누산 48-bit, GAP 합 26-bit입니다. GAP 합 폭은 BITWIDTH+log2(MAX_GAP_ITERATION)입니다.
 PARALLEL_PC/PF는 1만 지원합니다. 변경만으로 병렬 MAC이 늘어나지 않습니다.
 네트워크는 BasicBlock 기반 ResNet-20이며, core는 MAC 항 수를 바꾸어 Conv/FC에 재사용합니다.
-Controller·메모리·AXI/DMA·레이어 순서는 core에 포함하지 않습니다.
+Controller·메모리·AXI/DMA·레이어 순서는 core에 포함하지 않습니다. Conv의 윈도우·패딩·채널 순서는 외부에서 결정하며, FC도 같은 MAC 경로를 사용합니다.
 
 ## 입력과 출력
 

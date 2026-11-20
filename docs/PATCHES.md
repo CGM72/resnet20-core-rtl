@@ -4,10 +4,17 @@
 
 | 버전 | 변경 내역 | 배포 소스 |
 | --- | --- | --- |
-| 1.2.1 | 전체 모델의 레이어별 RTL 출력 덤프와 Python SNR 추출 추가. 최종 로짓 50 dB 검증 유지. 문서를 다섯 가지 가이드로 개편 | [main](https://github.com/CGM72/resnet20-core-rtl/tree/main) · [ZIP](https://github.com/CGM72/resnet20-core-rtl/raw/refs/heads/main/downloads/resnet20-core-rtl-v1.2.1.zip) |
+| 1.2.2 | 합성곱 탭 처리와 skip 정렬을 `rtl/compute/conv.v`로 분리 | [main](https://github.com/CGM72/resnet20-core-rtl/tree/main) · [ZIP](https://github.com/CGM72/resnet20-core-rtl/raw/refs/heads/main/downloads/resnet20-core-rtl-v1.2.2.zip) |
+| 1.2.1 | 전체 모델의 레이어별 RTL 출력 덤프와 Python SNR 추출 추가. 최종 로짓 50 dB 검증 유지. 문서를 다섯 가지 가이드로 개편 | [배포 커밋](https://github.com/CGM72/resnet20-core-rtl/tree/7286fe3115014e6139d166cadbc6cb26c35af6fe) · [ZIP](https://github.com/CGM72/resnet20-core-rtl/raw/refs/heads/main/downloads/resnet20-core-rtl-v1.2.1.zip) |
 | 1.1.1 | 1.1.0 RTL의 가독성 개선과 SoC 문서 보강. 기본 core 논리 동등성 확인 | [v1.1.1](https://github.com/CGM72/resnet20-core-rtl/tree/v1.1.1) · [release/1.1.1](https://github.com/CGM72/resnet20-core-rtl/tree/release/1.1.1) · [ZIP](https://github.com/CGM72/resnet20-core-rtl/raw/refs/heads/main/downloads/resnet20-core-rtl-v1.1.1.zip) |
 | 1.1.0 | MAC 5단계, GAP 4단계 shift 평균, 4-entry skip FIFO 적용. 기본 GAP 크기는 2의 거듭제곱 | [v1.1.0](https://github.com/CGM72/resnet20-core-rtl/tree/v1.1.0) · [release/1.1.0](https://github.com/CGM72/resnet20-core-rtl/tree/release/1.1.0) · [ZIP](https://github.com/CGM72/resnet20-core-rtl/raw/refs/heads/main/downloads/resnet20-core-rtl-v1.1.0.zip) |
 | 1.0.0 | 초기 core와 독립 모듈 테스트벤치, Vivado 분석 흐름. MAC/GAP 2단계와 가변 N 평균 | [v1.0.0](https://github.com/CGM72/resnet20-core-rtl/tree/v1.0.0) · [release/1.0.0](https://github.com/CGM72/resnet20-core-rtl/tree/release/1.0.0) · [ZIP](https://github.com/CGM72/resnet20-core-rtl/raw/refs/heads/main/downloads/resnet20-core-rtl-v1.0.0.zip) |
+
+## 1.2.2 검증
+
+- Yosys 0.52에서 기본 파라미터의 1.2.1과 1.2.2 core를 평탄화해 비교했습니다. 계층 이동으로 이름이 바뀐 신호를 대응시킨 뒤 동등성 지점 828개를 모두 증명했습니다.
+- Verilator core 연결 테스트는 531개 출력의 값·지연을 확인했습니다. 전체 모델의 22개 레이어 정수 기준값 비교를 통과했고 Python SNR 보고서는 1.2.1과 바이트 단위로 일치했습니다. 최종 로짓 SNR은 54.12 dB입니다.
+- Yosys XC7 평탄화 합성에서 FF 543개와 DSP48E1 1개가 동일했고, LUT 프리미티브 수는 686개에서 691개로 바뀌었습니다. Vivado 배치·배선 후 타이밍과 자원 수치는 미측정입니다.
 
 ## 1.2.1 검증
 

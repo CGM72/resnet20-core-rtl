@@ -1,16 +1,16 @@
-# 모듈 선언 사전 — 1.1.1
+# 모듈 선언 사전
 
 [실행 가이드](../GUIDE.md) · [파형 가이드](../ANALYSIS.md) · [사용 SoC](../SOC.md)
 
-이 폴더는 **1.1.1의 실제 RTL**에 선언된 파라미터·포트·내부 wire/reg·함수 인자/지역 변수를 설명합니다.
-범위는 core와 5개 연산 파일이며, 원본 프레임워크의 Controller/AXI와 테스트벤치 변수는 별도입니다.
+이 폴더는 RTL에 선언된 파라미터·포트·내부 wire/reg·함수 인자/지역 변수를 설명합니다.
+범위는 core와 6개 연산 파일이며, 원본 프레임워크의 Controller/AXI와 테스트벤치 변수는 별도입니다.
 
 처음 읽을 때는 **ReLU → Residual → Pool → MAC → GAP → core** 순서를 권장합니다.
 각 문서는 역할 요약 → 데이터 흐름 → 선언별 표 → 숫자 예제 순서입니다.
 
 | 파일 | 설명 | 정리한 선언 수 |
 |---|---|---:|
-| [core.v](core.md) | core 연결·skip 정렬 | 51 |
+| [core.v 및 conv.v](core.md) | core 연결·합성곱·skip 정렬 | — |
 | [mac.v](mac.md) | MAC와 bias MAC | 60 |
 | [residual.v](residual.md) | Residual 포화 덧셈 | 18 |
 | [relu.v](relu.md) | ReLU | 12 |

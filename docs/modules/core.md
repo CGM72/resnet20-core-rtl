@@ -1,6 +1,6 @@
-# core.v 선언 사전 — 1.1.1
+# core.v와 conv.v 선언 사전
 
-[모듈 목록·읽는 법](README.md) · [실제 RTL](../../rtl/compute/core.v) · [파형 확인](../ANALYSIS.md)
+[모듈 목록·읽는 법](README.md) · [core.v](../../rtl/compute/core.v) · [conv.v](../../rtl/compute/conv.v) · [파형 확인](../ANALYSIS.md)
 
 외부에서 순서와 주소를 맞춰 보낸 연산 항을 MAC→Residual→ReLU→MaxPool→GAP로 연결한다. 레이어 실행 순서나 메모리 주소를 만드는 Controller는 이 모듈 밖에 있다.
 
@@ -47,6 +47,23 @@ E0은 입력 수신 상승 에지이며, 출력 시점은 해당 에지의 레�
 | `out_enable` | output / 1비트, 조합 전달 | gap_valid를 그대로 연결한다. output reg 선언이지만 이 포트 때문에 출력 단계가 추가되지는 않는다. |
 | `out_data` | output / 16비트 bit-vector, 조합 전달 | gap_data를 그대로 연결한다. 내용은 signed Q5.10 결과이며 Signed Decimal로 확인한다. |
 
+### 내부 연결 신호와 인스턴스
+
+`u_conv`는 `conv.v`의 합성곱 및 skip 정렬 모듈입니다. `use_residual = mac_enable && residual_enable`로 잔차 처리를 활성화합니다. `residual_in_valid`·`residual_main`·`residual_skip`을 `u_residual`로 전달합니다.
+
+| 선언 이름 | 선언 종류·기본 폭/값 | 역할·갱신 시점 |
+|---|---|---|
+| `residual_valid` | wire / 1비트 | 잔차 합 또는 우회 결과의 유효 표시. 다음 블록의 in_enable과 연결한다. |
+| `relu_valid` | wire / 1비트 | ReLU 또는 우회 결과의 유효 표시. 다음 블록의 in_enable과 연결한다. |
+| `pooling_valid` | wire / 1비트 | MaxPool 창 결과 또는 우회 값의 유효 표시. 다음 블록의 in_enable과 연결한다. |
+| `gap_valid` | wire / 1비트 | GAP 평균 또는 우회 결과의 유효 표시. 최종 out_enable로 그대로 연결한다. |
+| `residual_data` | wire / signed 16비트 | 잔차 합 또는 우회 결과. 같은 이름의 valid가 1일 때만 사용한다. |
+| `relu_data` | wire / signed 16비트 | ReLU 또는 우회 결과. 같은 이름의 valid가 1일 때만 사용한다. |
+| `pooling_data` | wire / signed 16비트 | MaxPool 창 결과 또는 우회 값. 같은 이름의 valid가 1일 때만 사용한다. |
+| `gap_data` | wire / signed 16비트 | GAP 평균 또는 우회 결과. 같은 이름의 valid가 1일 때만 사용한다. |
+
+## 모듈 `conv`
+
 ### 내부 폭·상수
 
 | 선언 이름 | 선언 종류·기본 폭/값 | 역할·갱신 시점 |
@@ -59,16 +76,8 @@ E0은 입력 수신 상승 에지이며, 출력 시점은 해당 에지의 레�
 |---|---|---|
 | `mac_last_input` | wire / 1비트 | u_mac.last_input의 연결선. 마지막 MAC 항을 받으면 waiting_for_skip을 세운다. |
 | `mac_valid` | wire / 1비트 | 내적의 반올림/포화 결과 또는 MAC 우회 값의 유효 표시. 잔차 활성 시 pair_valid 구성에 사용하고 비활성 시 residual_in_valid로 전달한다. |
-| `residual_valid` | wire / 1비트 | 잔차 합 또는 우회 결과의 유효 표시. 다음 블록의 in_enable과 연결한다. |
-| `relu_valid` | wire / 1비트 | ReLU 또는 우회 결과의 유효 표시. 다음 블록의 in_enable과 연결한다. |
-| `pooling_valid` | wire / 1비트 | MaxPool 창 결과 또는 우회 값의 유효 표시. 다음 블록의 in_enable과 연결한다. |
-| `gap_valid` | wire / 1비트 | GAP 평균 또는 우회 결과의 유효 표시. 최종 out_enable로 그대로 연결한다. |
 | `mac_data` | wire / signed 16비트 | 내적의 반올림/포화 결과 또는 MAC 우회 값. 같은 이름의 valid가 1일 때만 사용한다. |
-| `residual_data` | wire / signed 16비트 | 잔차 합 또는 우회 결과. 같은 이름의 valid가 1일 때만 사용한다. |
-| `relu_data` | wire / signed 16비트 | ReLU 또는 우회 결과. 같은 이름의 valid가 1일 때만 사용한다. |
-| `pooling_data` | wire / signed 16비트 | MaxPool 창 결과 또는 우회 값. 같은 이름의 valid가 1일 때만 사용한다. |
-| `gap_data` | wire / signed 16비트 | GAP 평균 또는 우회 결과. 같은 이름의 valid가 1일 때만 사용한다. |
-| `use_residual` | wire / 1비트 | mac_enable && residual_enable. 두 기능이 모두 활성일 때만 main/skip 정렬과 합산을 사용한다. |
+| `use_residual` | input / 1비트 | mac_enable && residual_enable. 두 기능이 모두 활성일 때만 main/skip 정렬과 합산을 사용한다. |
 | `waiting_for_skip` | reg / 1비트 | 마지막 MAC 항 뒤 skip을 기다린다는 상태. skip을 받으면 0으로 돌아간다. |
 | `mac_held_valid` | reg / 1비트 | MAC 결과를 보관 중이라는 표시. skip과 한 쌍을 전달하면 지운다. |
 | `mac_held_data` | reg / signed 16비트 | skip이 늦을 때 보관하는 MAC 결과. mac_held_valid=1일 때만 의미가 있다. |
@@ -84,11 +93,11 @@ E0은 입력 수신 상승 에지이며, 출력 시점은 해당 에지의 레�
 | `skip_push` | wire / 1비트 | 이번 skip을 FIFO에 저장할 조건. 빈 FIFO에서 바로 main과 짝지어 소비하면 저장하지 않는다. |
 | `skip_pop` | wire / 1비트 | FIFO 맨 앞 skip을 main과 짝지어 소비하는 조건. 읽기 포인터를 이동시킨다. |
 
-### 하위 모듈 인스턴스: 변수와 구분
+### 인스턴스 경로
 
 | 이름 | 연결된 모듈 | 역할 |
 |---|---|---|
-| `u_mac` | mac_accumulate | 내적/bias/반올림/포화 |
+| `u_conv.u_mac` | mac_accumulate | 내적/bias/반올림/포화 |
 | `u_residual` | residual | 정렬된 main+skip 포화 합 |
 | `u_relu` | relu | 음수 제거 |
 | `u_pooling` | pooling | 창 최대값 |

@@ -8,6 +8,7 @@ namespace eval ::fpga_project {
         python auto \
         rtl_files {
             rtl/compute/mac.v
+            rtl/compute/conv.v
             rtl/compute/residual.v
             rtl/compute/relu.v
             rtl/compute/pooling.v
