@@ -6,7 +6,7 @@
 | --- | --- |
 | [실행 가이드](docs/GUIDE.md) | 소스 준비와 Vivado Tcl 명령 |
 | [분석 가이드](docs/ANALYSIS.md) | 기능 테스트, 파형, 타이밍, Utilization, SNR 결과 판정 |
-| [버전별 패치 내역](docs/PATCHES.md) | 변경 사항과 [버전별 다운로드](https://github.com/CGM72/resnet20-core-rtl/releases) |
+| [버전별 패치 내역](docs/PATCHES.md) | 변경 사항 · [최신 배포 ZIP v1.2.3](https://github.com/CGM72/resnet20-core-rtl/raw/refs/heads/main/downloads/resnet20-core-rtl-v1.2.3.zip) · [모든 버전](https://github.com/CGM72/resnet20-core-rtl/releases) |
 | [SoC 가이드](docs/SOC.md) | 대상 보드와 PS·PL 통합 범위 |
 | [아키텍처](docs/architecture.md) | RTL 구조, 인터페이스, 수치, 지연 |
 
